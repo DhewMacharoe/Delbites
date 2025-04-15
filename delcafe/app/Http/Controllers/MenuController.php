@@ -19,8 +19,6 @@ class MenuController extends Controller
         }
         return response()->json($menu, 200);
     }
-
-    // Tambah menu baru
     public function store(Request $request)
     {
         $request->validate([
@@ -35,8 +33,6 @@ class MenuController extends Controller
         $menu = Menu::create($request->all());
         return response()->json($menu, 201);
     }
-
-    // Update menu
     public function update(Request $request, $id)
     {
         $menu = Menu::find($id);
@@ -56,8 +52,6 @@ class MenuController extends Controller
         $menu->update($request->all());
         return response()->json($menu, 200);
     }
-
-    // Hapus menu
     public function destroy($id)
     {
         $menu = Menu::find($id);
