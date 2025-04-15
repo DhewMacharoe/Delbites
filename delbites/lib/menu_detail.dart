@@ -8,7 +8,7 @@ class MenuDetail extends StatelessWidget {
   const MenuDetail({required this.name, required this.price, Key? key})
       : super(key: key);
 
-  @override
+  @override 
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
