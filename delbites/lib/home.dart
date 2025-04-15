@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            SystemNavigator.pop(); // keluar dari aplikasi
+                            SystemNavigator.pop();
                           },
                           child: const Text("Logout"),
                         ),
