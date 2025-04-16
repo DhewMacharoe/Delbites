@@ -1,8 +1,8 @@
 import 'dart:convert';
 
 import 'package:Delbites/history_pesanan.dart';
+import 'package:Delbites/home.dart';
 import 'package:Delbites/keranjang.dart';
-import 'package:Delbites/mainy.dart';
 import 'package:Delbites/menu_detail.dart';
 import 'package:Delbites/minuman.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -118,8 +118,8 @@ class _MenuMakananState extends State<MenuMakanan> {
         child: Row(
           children: [
             _buildCategoryButton('Rekomendasi !!', () {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const HomePage()));
+              Navigator.pushReplacement(
+                  context, MaterialPageRoute(builder: (context) => HomePage()));
             }),
             _buildCategoryButton('Makanan', () {
               Navigator.pushReplacement(context,
