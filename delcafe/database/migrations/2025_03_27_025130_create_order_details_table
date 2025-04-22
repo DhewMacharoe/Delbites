@@ -1,0 +1,26 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateOrderDetailsTable extends Migration {
+    public function up() {
+        Schema::create('order_details', function (Blueprint $table) {
+            $table->id('detail_id');
+            $table->unsignedBigInteger('order_id');
+            $table->unsignedBigInteger('menu_id');
+            $table->integer('jumlah_pesanan')->unsigned();
+            $table->decimal('total_harga', 10, 2)->default(0);
+            $table->timestamps();
+
+            // Sesuaikan foreign key dengan primary key yang benar
+            $table->foreign('order_id')->references('order_id')->on('orders')->cascadeOnDelete();
+            $table->foreign('menu_id')->references('menu_id')->on('menu')->cascadeOnDelete();
+        });
+    }
+
+    public function down() {
+        Schema::dropIfExists('order_details');
+    }
+}
