@@ -11,7 +11,6 @@ class CreateAdminsTable extends Migration {
             $table->string('email', 50)->unique();
             $table->string('password', 25);
             $table->enum('role', ['owner', 'staf']);
-            $table->string('no_hp', 15)->nullable();
             $table->timestamps();
         });
     }

@@ -34,7 +34,7 @@ class _HomePageState extends State<HomePage> {
 
       List<Map<String, String>> allItems = data
           .where(
-              (item) => item["stok"] != null && item["stok"] > 0) // Filter stok
+              (item) => item["stok"] != null && item["stok"] > 0)
           .map((item) => {
                 "name": item["nama_menu"].toString(),
                 "price": "Rp ${item["harga"]}",

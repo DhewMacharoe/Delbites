@@ -18,7 +18,6 @@ Route::post('/order', [OrderController::class, 'store']);
 Route::put('/order/{id}', [OrderController::class, 'update']);
 Route::delete('/order/{id}', [OrderController::class, 'destroy']);
 
-Route::middleware('jwt.auth')->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::post('/logout', [AuthController::class, 'logout']);
-});
+Route::post('/login', [AuthController::class, 'loginApi']);
+Route::post('/logout', [AuthController::class, 'logoutApi']);
+Route::get('/me', [AuthController::class, 'me']);
