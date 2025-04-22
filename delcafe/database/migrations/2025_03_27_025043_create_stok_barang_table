@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateStokBarangTable extends Migration
+{
+    public function up()
+    {
+        Schema::create('stok_barang', function (Blueprint $table) {
+            $table->id('stok_id');
+            $table->string('nama_barang', 25);
+            $table->integer('jumlah');
+            $table->enum('satuan', ['kg', 'liter', 'pcs']);
+            $table->foreignId('admin_id')->nullable()->constrained('admins', 'user_id')->nullOnDelete();
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('stok_barang');
+    }
+}
