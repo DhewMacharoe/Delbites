@@ -17,7 +17,3 @@ Route::get('/order/{id}', [OrderController::class, 'show']);
 Route::post('/order', [OrderController::class, 'store']);
 Route::put('/order/{id}', [OrderController::class, 'update']);
 Route::delete('/order/{id}', [OrderController::class, 'destroy']);
-
-Route::post('/login', [AuthController::class, 'loginApi']);
-Route::post('/logout', [AuthController::class, 'logoutApi']);
-Route::get('/me', [AuthController::class, 'me']);
