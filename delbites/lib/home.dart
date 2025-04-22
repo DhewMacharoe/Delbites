@@ -2,13 +2,14 @@ import 'dart:convert';
 
 import 'package:Delbites/history_pesanan.dart';
 import 'package:Delbites/keranjang.dart';
+import 'package:Delbites/login.dart';
 import 'package:Delbites/makanan.dart';
 import 'package:Delbites/menu_detail.dart';
 import 'package:Delbites/minuman.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -32,6 +33,8 @@ class _HomePageState extends State<HomePage> {
       List<dynamic> data = jsonDecode(response.body);
 
       List<Map<String, String>> allItems = data
+          .where(
+              (item) => item["stok"] != null && item["stok"] > 0) // Filter stok
           .map((item) => {
                 "name": item["nama_menu"].toString(),
                 "price": "Rp ${item["harga"]}",
@@ -114,8 +117,17 @@ class _HomePageState extends State<HomePage> {
                           child: const Text("Batal"),
                         ),
                         TextButton(
-                          onPressed: () {
-                            SystemNavigator.pop();
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs
+                                .remove('isLoggedIn'); // Hapus status login
+
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const MasukPage()),
+                              (Route<dynamic> route) => false,
+                            );
                           },
                           child: const Text("Logout"),
                         ),
