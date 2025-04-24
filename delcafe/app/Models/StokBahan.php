@@ -10,8 +10,7 @@ class StokBahan extends Model
     use HasFactory;
 
     protected $table = 'stok_bahan';
-    // Primary key default 'id' tidak perlu didefinisikan
-
+    
     protected $fillable = [
         'id_admin',
         'nama_bahan',
@@ -19,9 +18,9 @@ class StokBahan extends Model
         'satuan',
     ];
 
-    // Relasi dengan Admin
+    // Relasi ke Admin
     public function admin()
     {
-        return $this->belongsTo(Admin::class, 'id_admin', 'id_admin');
+        return $this->belongsTo(Admin::class, 'id_admin');
     }
 }

@@ -5,59 +5,44 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
 
 class Admin extends Authenticatable
 {
-    use  HasFactory, Notifiable;
+    use HasFactory, Notifiable;
 
     protected $table = 'admin';
-    protected $primaryKey = 'id_admin';
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
+    
     protected $fillable = [
         'nama',
         'email',
         'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'password' => 'hashed',
-    ];
-
-    // Relasi dengan Menu
-    public function menus()
+    // Relasi ke Menu
+    public function menu()
     {
-        return $this->hasMany(Menu::class, 'id_admin', 'id_admin');
+        return $this->hasMany(Menu::class, 'id_admin');
     }
 
-    // Relasi dengan Pemesanan
-    public function pemesanans()
+    // Relasi ke Pemesanan
+    public function pemesanan()
     {
-        return $this->hasMany(Pemesanan::class, 'admin_id', 'id_admin');
+        return $this->hasMany(Pemesanan::class, 'id_admin');
     }
 
-    // Relasi dengan StokBahan
-    public function stokBahans()
+    // Relasi ke StokBahan
+    public function stokBahan()
     {
-        return $this->hasMany(StokBahan::class, 'id_admin', 'id_admin');
+        return $this->hasMany(StokBahan::class, 'id_admin');
+    }
+
+    // Relasi ke Laporan
+    public function laporan()
+    {
+        return $this->hasMany(Laporan::class, 'id_admin');
     }
 }
