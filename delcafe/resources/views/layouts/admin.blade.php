@@ -96,7 +96,7 @@
                             <a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}"
                                 href="{{ route('produk.index') }}">
                                 <i class="fas fa-box"></i>
-                                Produk
+                                Menu
                             </a>
                         </li>
                         <li class="nav-item">

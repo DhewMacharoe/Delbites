@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Daftar Produk - DelBites')
+@section('title', 'Menejemen Menu - DelBites')
 
-@section('page-title', 'Daftar Produk')
+@section('page-title', 'Menejemen Menu')
 
 @section('content')
 <div class="container-fluid">
@@ -20,8 +20,8 @@
                             </select>
                         </div>
                         <div class="col-md-4">
-                            <label for="search" class="form-label">Cari Produk</label>
-                            <input type="text" class="form-control" id="search" name="search" value="{{ request('search') }}" placeholder="Masukkan nama produk...">
+                            <label for="search" class="form-label">Cari Menu</label>
+                            <input type="text" class="form-control" id="search" name="search" value="{{ request('search') }}" placeholder="Masukkan nama Menu...">
                         </div>
                         <div class="col-md-4 d-flex align-items-end">
                             <button type="submit" class="btn btn-primary me-2">Filter</button>
@@ -37,9 +37,9 @@
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">Daftar Produk</h5>
+                    <h5 class="mb-0">Daftar Menu</h5>
                     <a href="{{ route('produk.create') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-1"></i> Tambah Produk
+                        <i class="fas fa-plus me-1"></i> Tambah Menu
                     </a>
                 </div>
                 <div class="card-body">
@@ -48,7 +48,7 @@
                             <thead>
                                 <tr>
                                     <th>Gambar</th>
-                                    <th>Nama Produk</th>
+                                    <th>Nama Menu</th>
                                     <th>Kategori</th>
                                     <th>Harga</th>
                                     <th>Stok</th>

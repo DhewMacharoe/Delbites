@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Daftar Pesanan - DelBites')
+@section('title', 'Menejemen Pesanan - DelBites')
 
-@section('page-title', 'Daftar Pesanan')
+@section('page-title', 'Menejemen Pesanan')
 
 @section('content')
 <div class="container-fluid">

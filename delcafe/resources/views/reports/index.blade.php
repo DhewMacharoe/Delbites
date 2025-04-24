@@ -1,8 +1,8 @@
 @extends('layouts.admin')
 
-@section('title', 'Laporan - DelBites')
+@section('title', 'Menejemen Laporan - DelBites')
 
-@section('page-title', 'Laporan')
+@section('page-title', 'Menejemen Laporan')
 
 @section('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
