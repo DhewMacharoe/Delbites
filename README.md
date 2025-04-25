@@ -9,3 +9,7 @@ folder delcafe = laravel
 5. php artisan db:seed
 6. php artisan serve
 
+Run Step By Step
+di laravel: php artisan serve --host=127.0.0.1 --port=8000
+di cmd : adb reverse tcp:8000 tcp:8000
+di flutter : flutter pub get
