@@ -123,11 +123,11 @@ class _MenuMakananState extends State<MenuMakanan> {
             }),
             _buildCategoryButton('Makanan', () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const MenuMinuman()));
+                  MaterialPageRoute(builder: (context) => const MenuMakanan()));
             }),
             _buildCategoryButton('Minuman', () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const MenuMakanan()));
+                  MaterialPageRoute(builder: (context) => const MenuMinuman()));
             }),
           ],
         ),
@@ -159,98 +159,100 @@ class _MenuMakananState extends State<MenuMakanan> {
   }
 
   Widget _buildMenuItem(dynamic item) {
-    bool isOutOfStock = (item['stok'] ?? 0) == 0;
+  bool isOutOfStock = (item['stok'] ?? 0) == 0;
+  String imageUrl = "http://10.0.2.2:8000/storage/${item['gambar']}";
 
-    return GestureDetector(
-      onTap: isOutOfStock
-          ? null
-          : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => MenuDetail(
-                    name: item['nama_menu'] ?? 'Tanpa Nama',
-                    price: "Rp ${item['harga'] ?? 0}",
+  return GestureDetector(
+    onTap: isOutOfStock
+        ? null
+        : () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MenuDetail(
+                  name: item['nama_menu'] ?? 'Tanpa Nama',
+                  price: "Rp ${item['harga'] ?? 0}",
+                  imageUrl: imageUrl, // ✅ tambahkan ini
+                ),
+              ),
+            );
+          },
+    child: Opacity(
+      opacity: isOutOfStock ? 0.5 : 1.0,
+      child: Stack(
+        children: [
+          Card(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(15),
+            ),
+            elevation: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                  child: Image.network(
+                    imageUrl, // ✅ gunakan ini
+                    height: 100,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        height: 100,
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(Icons.fastfood, size: 50),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              );
-            },
-      child: Opacity(
-        opacity: isOutOfStock ? 0.5 : 1.0,
-        child: Stack(
-          children: [
-            Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
-              ),
-              elevation: 3,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(15)),
-                    child: Image.network(
-                      item['gambar'] ?? 'https://via.placeholder.com/150',
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          height: 100,
-                          width: double.infinity,
-                          color: Colors.grey[300],
-                          child: const Center(
-                              child: Icon(Icons.fastfood, size: 50)),
-                        );
-                      },
-                    ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item['nama_menu'] ?? 'Tanpa Nama',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        "Rp ${item['harga'] ?? 0}",
+                        style: const TextStyle(color: Colors.grey),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item['nama_menu'] ?? 'Tanpa Nama',
-                          style: const TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          "Rp ${item['harga'] ?? 0}",
-                          style: const TextStyle(color: Colors.grey),
-                        ),
-                      ],
-                    ),
+                ),
+              ],
+            ),
+          ),
+          if (isOutOfStock)
+            Positioned(
+              top: 5,
+              right: 5,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Text(
+                  "Habis",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
               ),
             ),
-            if (isOutOfStock)
-              Positioned(
-                top: 5,
-                right: 5,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Text(
-                    "Habis",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildBottomNavigationBar() {
     return CurvedNavigationBar(

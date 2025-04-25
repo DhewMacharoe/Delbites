@@ -13,11 +13,11 @@ class HistoryPesananPage extends StatefulWidget {
 }
 
 class _HistoryPesananPageState extends State<HistoryPesananPage> {
-  String selectedStatus = "Pending";
+  String selectedStatus = "Menunggu";
   List<Map<String, String>> orders = [];
 
   final Map<String, Color> statusColors = {
-    "Pending": Color(0xFFFFC107),
+    "Menunggu": Color(0xFFFFC107),
     "Diproses": Color(0xFF2196F3),
     "Selesai": Color(0xFF4CAF50),
     "Dibatalkan": Color(0xFFF44336),

@@ -117,7 +117,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 "price": item["price"].toString(),
                                 "quantity": item["quantity"].toString(),
                                 "date": "Sekarang",
-                                "status": "Pending",
+                                "status": "Menunggu",
                                 "payment": selectedPayment!,
                               };
                             }).toList();

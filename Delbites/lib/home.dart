@@ -38,6 +38,7 @@ class _HomePageState extends State<HomePage> {
                 "stok": item["stok"].toString(),
                 "jumlah_terjual": (item["jumlah_terjual"] ?? "0").toString(),
                 "kategori": item["kategori"].toString(),
+                "image": item["gambar"].toString(),
               })
           .toList();
 
@@ -72,7 +73,7 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [Color(0xFF2D5EA2)        , Color(0xFF2D5EA2)],
+          colors: [Color(0xFF2D5EA2), Color(0xFF2D5EA2)],
         ),
       ),
       child: SafeArea(
@@ -201,61 +202,90 @@ class _HomePageState extends State<HomePage> {
       ),
       itemCount: foodItems.length,
       itemBuilder: (context, index) {
+        final item = foodItems[index];
         return _buildFoodCard(
-          name: foodItems[index]["name"]!,
-          price: foodItems[index]["price"]!,
+          name: item["name"]!,
+          price: item["price"]!,
+          imageUrl:
+              "http://127.0.0.1:8000/storage/${item['image']}", // tambahkan ini
         );
       },
     );
   }
 
-  Widget _buildFoodCard({required String name, required String price}) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MenuDetail(name: name, price: price),
+  Widget _buildFoodCard({
+  required String name,
+  required String price,
+  required String imageUrl,
+}) {
+  return GestureDetector(
+    onTap: () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MenuDetail(
+            name: name,
+            price: price,
+            imageUrl: imageUrl, // ⬅️ Tambahkan ini
           ),
-        );
-      },
-      child: Card(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        elevation: 4,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(
-              child: Container(
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
+        ),
+      );
+    },
+    child: Card(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 4,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
+            child: Image.network(
+              imageUrl,
+              height: 100,
+              width: double.infinity,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  height: 100,
                   color: Colors.grey[300],
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(10)),
-                ),
-                child: Icon(Icons.fastfood, size: 50, color: Colors.grey[700]),
-              ),
+                  child: const Center(
+                    child: Icon(Icons.fastfood, size: 50),
+                  ),
+                );
+              },
             ),
-            Padding(
+          ),
+          Expanded(
+            child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 5),
-                  Text(price,
-                      style: const TextStyle(fontSize: 14, color: Colors.grey)),
-                  const SizedBox(height: 8),
+                  Text(
+                    price,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                    ),
+                  ),
                 ],
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _buildBottomNavigation() {
     return CurvedNavigationBar(

@@ -59,7 +59,7 @@ class _WaitingPageState extends State<WaitingPage> {
         "price": order["price"]!,
         "quantity": order["quantity"]!,
         "date": order["date"]!,
-        "status": "Pending",
+        "status": "Menunggu",
         "payment": order["payment"]!,
       };
     }).toList();
