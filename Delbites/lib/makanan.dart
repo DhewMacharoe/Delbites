@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:Delbites/history_pesanan.dart';
 import 'package:Delbites/home.dart';
 import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/menu_detail.dart';
 import 'package:Delbites/minuman.dart';
+import 'package:Delbites/riwayat_pesanan.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -267,7 +267,7 @@ class _MenuMakananState extends State<MenuMakanan> {
         if (index == 0) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HistoryPesananPage()),
+            MaterialPageRoute(builder: (context) => RiwayatPesananPage()),
           );
         } else if (index == 1) {
           Navigator.push(
