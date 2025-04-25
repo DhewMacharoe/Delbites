@@ -11,6 +11,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use App\Http\Controllers\Controller;
+use App\Models\Menu as ModelsMenu;
+use App\Models\Pemesanan as ModelsPemesanan;
+use App\Models\StokBahan;
 
 class Admin extends Authenticatable
 {
@@ -51,13 +54,13 @@ class Admin extends Authenticatable
     // Relasi dengan Menu
     public function menus()
     {
-        return $this->hasMany(Menu::class, 'id_admin', 'id_admin');
+        return $this->hasMany(ModelsMenu::class, 'id_admin', 'id_admin');
     }
 
     // Relasi dengan Pemesanan
     public function pemesanans()
     {
-        return $this->hasMany(Pemesanan::class, 'admin_id', 'id_admin');
+        return $this->hasMany(ModelsPemesanan::class, 'admin_id', 'id_admin');
     }
 
     // Relasi dengan StokBahan

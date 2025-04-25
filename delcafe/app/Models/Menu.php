@@ -10,7 +10,6 @@ class Menu extends Model
     use HasFactory;
 
     protected $table = 'menu';
-    // Primary key default 'id' tidak perlu didefinisikan
 
     protected $fillable = [
         'id_admin',
