@@ -1,19 +1,22 @@
+import 'dart:convert';
+
 import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/waiting_page.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
-class HistoryPesananPage extends StatefulWidget {
+class RiwayatPesananPage extends StatefulWidget {
   final List<Map<String, String>>? newOrders;
 
-  const HistoryPesananPage({Key? key, this.newOrders}) : super(key: key);
+  const RiwayatPesananPage({Key? key, this.newOrders}) : super(key: key);
 
   @override
   _HistoryPesananPageState createState() => _HistoryPesananPageState();
 }
 
-class _HistoryPesananPageState extends State<HistoryPesananPage> {
-  String selectedStatus = "Menunggu";
+class _HistoryPesananPageState extends State<RiwayatPesananPage> {
+  String selectedStatus = "Pending";
   List<Map<String, String>> orders = [];
 
   final Map<String, Color> statusColors = {
@@ -26,8 +29,37 @@ class _HistoryPesananPageState extends State<HistoryPesananPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.newOrders != null) {
-      orders.addAll(widget.newOrders!);
+    fetchOrders(); // Fetch orders when the page initializes
+  }
+
+  Future<void> fetchOrders() async {
+    final String apiUrl = 'http://127.0.0.1:8000/api/pemesanan';
+
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        print(response.body); // Debugging: print response
+
+        List<dynamic> data = json.decode(response.body);
+
+        setState(() {
+          orders = data.map((order) {
+            return {
+              'name': order['pelanggan']['name']?.toString() ?? '',
+              'quantity': order['quantity']?.toString() ?? '',
+              'payment': order['metode_pembayaran']?.toString() ?? '',
+              'date': order['waktu_pemesanan']?.toString() ?? '',
+              'price': order['total_harga']?.toString() ?? '',
+              'status': order['status']?.toString() ?? '',
+            };
+          }).toList();
+        });
+      } else {
+        throw Exception('Failed to load orders');
+      }
+    } catch (e) {
+      throw Exception('Failed to load orders: $e');
     }
   }
 
@@ -161,12 +193,12 @@ class _HistoryPesananPageState extends State<HistoryPesananPage> {
         if (index == 0) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HistoryPesananPage()),
+            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
           );
         } else if (index == 1) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => KeranjangPage()),
+            MaterialPageRoute(builder: (context) => const KeranjangPage()),
           );
         }
       },

@@ -1,10 +1,10 @@
 import 'dart:convert';
 
-import 'package:Delbites/history_pesanan.dart';
 import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/makanan.dart';
 import 'package:Delbites/menu_detail.dart';
 import 'package:Delbites/minuman.dart';
+import 'package:Delbites/riwayat_pesanan.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -154,7 +154,7 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           children: [
             _buildCategoryButton(
-                'Rekomendasi',
+                'Rekomendasi !!',
                 () => Navigator.push(context,
                     MaterialPageRoute(builder: (context) => HomePage()))),
             _buildCategoryButton(
@@ -302,7 +302,7 @@ class _HomePageState extends State<HomePage> {
         if (index == 0) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => HistoryPesananPage()),
+            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
           );
         } else if (index == 1) {
           Navigator.push(

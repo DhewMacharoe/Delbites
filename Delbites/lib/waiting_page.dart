@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:Delbites/history_pesanan.dart';
+import 'package:Delbites/riwayat_pesanan.dart';
 import 'package:flutter/material.dart';
 
 class WaitingPage extends StatefulWidget {
@@ -67,7 +67,7 @@ class _WaitingPageState extends State<WaitingPage> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (context) => HistoryPesananPage(newOrders: updatedOrders),
+        builder: (context) => RiwayatPesananPage(newOrders: updatedOrders),
       ),
     );
   }
