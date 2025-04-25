@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [Color(0xFF2D5EA2)        , Color(0xFF2D5EA2)],
+          colors: [Color(0xFF2D5EA2), Color(0xFF2D5EA2)],
         ),
       ),
       child: SafeArea(
@@ -153,7 +153,7 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           children: [
             _buildCategoryButton(
-                'Rekomendasi',
+                'Rekomendasi !!',
                 () => Navigator.push(context,
                     MaterialPageRoute(builder: (context) => HomePage()))),
             _buildCategoryButton(

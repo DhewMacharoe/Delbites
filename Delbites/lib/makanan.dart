@@ -123,11 +123,11 @@ class _MenuMakananState extends State<MenuMakanan> {
             }),
             _buildCategoryButton('Makanan', () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const MenuMinuman()));
+                  MaterialPageRoute(builder: (context) => const MenuMakanan()));
             }),
             _buildCategoryButton('Minuman', () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => const MenuMakanan()));
+                  MaterialPageRoute(builder: (context) => const MenuMinuman()));
             }),
           ],
         ),

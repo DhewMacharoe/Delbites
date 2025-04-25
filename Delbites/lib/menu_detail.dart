@@ -12,12 +12,12 @@ class MenuDetail extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  title: Text(
-    name,
-    style: const TextStyle(color: Colors.white),
-  ),
-  backgroundColor: const Color(0xFF2D5EA2),
-),
+        title: Text(
+          name,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: const Color(0xFF2D5EA2),
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
