@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\MenuController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Api\PemesananController;
 use App\Http\Controllers\Api\PelangganController;
+use App\Http\Controllers\AdminController;
 
 Route::get('/menu', [MenuController::class, 'index']);
 Route::get('/menu/{id}', [MenuController::class, 'show']);
@@ -23,6 +24,12 @@ Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
 Route::post('/pemesanan', [PemesananController::class, 'store']);
 Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
 Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
+
+Route::get('/admin', [AdminController::class, 'index']);
+Route::get('/admin/{id}', [PemesananController::class, 'show']);
+Route::post('/admin', [PemesananController::class, 'store']);
+Route::put('/admin/{id}', [PemesananController::class, 'update']);
+Route::delete('/admin/{id}', [PemesananController::class, 'destroy']);
 
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
