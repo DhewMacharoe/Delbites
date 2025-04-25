@@ -61,7 +61,7 @@
                                 <tr>
                                     <td>
                                         @if($p->gambar)
-                                            <img src="{{ asset('storage/menu/' . $p->gambar) }}" alt="{{ $p->nama_menu }}" class="img-thumbnail" width="50">
+                                            <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_menu }}" class="img-thumbnail" width="50">
                                         @else
                                             <img src="{{ asset('icon/no-image.png') }}" alt="No Image" class="img-thumbnail" width="50">
                                         @endif

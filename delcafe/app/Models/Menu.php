@@ -36,7 +36,7 @@ class Menu extends Model
     // Relasi dengan Admin
     public function admin()
     {
-        return $this->belongsTo(Admin::class, 'id_admin', 'id_admin');
+        return $this->belongsTo(Admin::class, 'id_admin', 'id');
     }
 
     // Relasi dengan DetailPemesanan

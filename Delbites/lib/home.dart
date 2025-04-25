@@ -72,7 +72,7 @@ class _HomePageState extends State<HomePage> {
         gradient: LinearGradient(
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
-          colors: [Color(0xFF2D5EA2), Color.fromARGB(45, 94, 162, 100)],
+          colors: [Color(0xFF2D5EA2)        , Color(0xFF2D5EA2)],
         ),
       ),
       child: SafeArea(
@@ -90,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 8),
                   Image.asset(
-                    'assets/icon/logo.png',
+                    'assets/icon/logo1.png',
                     width: 60,
                     height: 60,
                   ),
