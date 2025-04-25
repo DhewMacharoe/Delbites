@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Api\Pemesanan;
+use App\Http\Controllers\Api\Menu;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Http\Controllers\Controller;
 
 class Admin extends Authenticatable
 {
