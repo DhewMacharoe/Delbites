@@ -40,15 +40,19 @@ class _HomePageState extends State<HomePage> {
                   'name': item['nama_menu'].toString(),
                   'price': item['harga'].toString(),
                   'stok': item['stok'].toString(),
-                  'jumlah_terjual': (item['jumlah_terjual'] ?? '0').toString(),
+                  'stok_terjual': (item['stok_terjual'] ?? '0').toString(),
                   'kategori': item['kategori'].toString(),
                   'image': item['gambar'].toString(),
                 })
             .toList();
 
+        // Sort the items based on stok_terjual in descending order
+        allItems.sort((a, b) => int.parse(b['stok_terjual']!)
+            .compareTo(int.parse(a['stok_terjual']!)));
+
+        // Select the top 8 items based on the highest number of sold items
         setState(() {
-          displayedItems =
-              allItems.where((item) => int.parse(item['stok']!) > 0).toList();
+          displayedItems = allItems.take(8).toList();
           isLoading = false;
         });
       } else {
@@ -64,12 +68,14 @@ class _HomePageState extends State<HomePage> {
 
   void filterCategory(String category) {
     setState(() {
-      if (category == 'Semua') {
-        // Hanya tampilkan stok > 0
-        displayedItems =
-            allItems.where((item) => int.parse(item['stok']!) > 0).toList();
+      if (category == 'Rekomendasi') {
+        displayedItems = allItems
+            .where((item) => int.parse(item['stok']!) > 0)
+            .toList()
+          ..sort((a, b) => int.parse(b['jumlah_terjual']!)
+              .compareTo(int.parse(a['jumlah_terjual']!)));
+        displayedItems = displayedItems.take(8).toList();
       } else {
-        // Tampilkan semua item dari kategori itu, stok berapapun
         displayedItems =
             allItems.where((item) => item['kategori'] == category).toList();
       }
@@ -210,7 +216,7 @@ class _HomePageState extends State<HomePage> {
         scrollDirection: Axis.horizontal,
         child: Row(
           children: const [
-            CategoryButton(label: "Semua"),
+            CategoryButton(label: "Rekomendasi"),
             CategoryButton(label: "makanan"),
             CategoryButton(label: "minuman"),
           ],
@@ -345,14 +351,11 @@ class MenuCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item['name']!,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(item['name']!),
                           const SizedBox(height: 5),
                           Text('Rp ${item['price']}'),
                           const SizedBox(height: 4),
-                          Text('Stok: ${item['stok']}',
-                              style: const TextStyle(fontSize: 12)),
+                          Text('Stok: ${item['stok']}'),
                         ],
                       ),
                     ),

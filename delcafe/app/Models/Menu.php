@@ -43,4 +43,9 @@ class Menu extends Model
     {
         return $this->hasMany(DetailPemesanan::class, 'id_menu', 'id');
     }
+
+    public static function getTopMenuItems()
+    {
+        return self::orderBy('stok_terjual', 'desc')->limit(8)->get();
+    }
 }

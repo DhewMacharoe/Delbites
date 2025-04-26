@@ -188,7 +188,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
       animationDuration: const Duration(milliseconds: 300),
       items: const <Widget>[
         Icon(Icons.home, size: 30, color: Colors.white),
-        Icon(Icons.access_time, size: 30, color: Colors.white),
+        Icon(Icons.history, size: 30, color: Colors.white),
         Icon(Icons.shopping_cart, size: 30, color: Colors.white),
       ],
       onTap: (index) {
