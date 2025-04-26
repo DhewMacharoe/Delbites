@@ -165,7 +165,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
     );
   }
 
-  Widget _buildBottomNavigation(BuildContext context) {
+  Widget buildBottomNavigation(BuildContext context) {
     return CurvedNavigationBar(
       backgroundColor: Colors.white,
       color: const Color(0xFF2D5EA2),
