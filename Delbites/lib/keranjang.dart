@@ -1,4 +1,7 @@
 import 'package:Delbites/checkout.dart';
+import 'package:Delbites/home.dart';
+import 'package:Delbites/riwayat_pesanan.dart';
+import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 
 List<Map<String, dynamic>> pesanan = [];
@@ -159,6 +162,67 @@ class _KeranjangPageState extends State<KeranjangPage> {
                 ],
               ),
             ),
+    );
+  }
+
+  Widget _buildBottomNavigation(BuildContext context) {
+    return CurvedNavigationBar(
+      backgroundColor: Colors.white,
+      color: const Color(0xFF2D5EA2),
+      buttonBackgroundColor: const Color(0xFF2D5EA2),
+      height: 60,
+      animationDuration: const Duration(milliseconds: 300),
+      items: const <Widget>[
+        Icon(Icons.home, size: 30, color: Colors.white),
+        Icon(Icons.access_time, size: 30, color: Colors.white),
+        Icon(Icons.shopping_cart, size: 30, color: Colors.white),
+      ],
+      onTap: (index) {
+        if (index == 0) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else if (index == 1) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
+          );
+        } else if (index == 2) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => KeranjangPage()),
+          );
+        }
+      },
+    );
+  }
+}
+
+class CategoryButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const CategoryButton({required this.label, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: ElevatedButton(
+        onPressed: onTap,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2D5EA2),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        ),
+        child: Text(
+          label,
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
     );
   }
 }

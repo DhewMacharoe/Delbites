@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:Delbites/home.dart';
 import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/waiting_page.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
@@ -16,7 +17,7 @@ class RiwayatPesananPage extends StatefulWidget {
 }
 
 class _HistoryPesananPageState extends State<RiwayatPesananPage> {
-  String selectedStatus = "Pending";
+  String selectedStatus = "Menunggu";
   List<Map<String, String>> orders = [];
 
   final Map<String, Color> statusColors = {
@@ -29,7 +30,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
   @override
   void initState() {
     super.initState();
-    fetchOrders(); // Fetch orders when the page initializes
+    fetchOrders();
   }
 
   Future<void> fetchOrders() async {
@@ -39,7 +40,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
-        print(response.body); // Debugging: print response
+        print(response.body);
 
         List<dynamic> data = json.decode(response.body);
 
@@ -163,7 +164,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
                   ),
                   trailing: Text("Rp${order["price"] ?? "0"}"),
                   onTap: () {
-                    if (selectedStatus == "Menunggu") {
+                    if (selectedStatus == "menunggu") {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -186,16 +187,22 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
       height: 60,
       animationDuration: const Duration(milliseconds: 300),
       items: const <Widget>[
+        Icon(Icons.home, size: 30, color: Colors.white),
         Icon(Icons.access_time, size: 30, color: Colors.white),
         Icon(Icons.shopping_cart, size: 30, color: Colors.white),
       ],
       onTap: (index) {
         if (index == 0) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else if (index == 1) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
           );
-        } else if (index == 1) {
+        } else if (index == 2) {
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const KeranjangPage()),

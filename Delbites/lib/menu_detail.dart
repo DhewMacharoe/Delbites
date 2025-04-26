@@ -1,26 +1,60 @@
-import 'package:Delbites/keranjang.dart';
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+const String baseUrl = 'http://127.0.0.1:8000/keranjang';
 
 class MenuDetail extends StatelessWidget {
   final String name;
   final String price;
-  final String imageUrl; // Tambahkan parameter ini
+  final String imageUrl;
+  final int menuId;
 
   const MenuDetail({
     required this.name,
     required this.price,
-    required this.imageUrl, // Jangan lupa di konstruktor juga
+    required this.imageUrl,
+    required this.menuId,
     Key? key,
   }) : super(key: key);
+
+  Future<void> addToCart(BuildContext context) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/keranjang'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'id_pelanggan': 1,
+          'id_menu': menuId,
+          'nama_menu': name,
+          'kategori': 'makanan',
+          'jumlah': 1,
+          'harga': price,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Item successfully added to the cart')),
+        );
+      } else {
+        throw Exception('Failed to add to cart');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          name,
-          style: const TextStyle(color: Colors.white),
-        ),
+        title: Text(name),
         backgroundColor: const Color(0xFF2D5EA2),
       ),
       body: Padding(
@@ -61,15 +95,7 @@ class MenuDetail extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                pesanan.add({
-                  'name': name,
-                  'price': price,
-                  'quantity': 1,
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Pesanan ditambahkan ke keranjang')),
-                );
+                addToCart(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4C53A5),
