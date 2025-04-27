@@ -54,7 +54,7 @@ class AuthService {
         'username': username,
         'phone': phone,
         'password':
-            password, // Simpan password dengan hashing di aplikasi nyata
+            password, 
       });
       return true;
     } catch (e) {

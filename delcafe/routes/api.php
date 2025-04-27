@@ -19,6 +19,7 @@ Route::get('/pelanggan/{id}', [PelangganController::class, 'show']);
 Route::post('/pelanggan', [PelangganController::class, 'store']);
 Route::put('/pelanggan/{id}', [PelangganController::class, 'update']);
 Route::delete('/pelanggan/{id}', [PelangganController::class, 'destroy']);
+Route::post('/pelanggan/register', [PelangganController::class, 'registerByUid']);
 
 Route::get('/pemesanan', [PemesananController::class, 'index']);
 Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);

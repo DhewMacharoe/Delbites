@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class PelangganService {
-  final String _baseUrl = 'http://127.0.0.1:8000/pelanggan';
+  final String _baseUrl = 'http://127.0.0.1:8000/api/pelanggan';
 
   Future<List<dynamic>> fetchPelanggan() async {
     final response = await http.get(Uri.parse('$_baseUrl/pelanggan'));
