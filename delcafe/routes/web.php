@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\PesananController; 
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\Api\PelangganController;
+use App\Http\Controllers\PelangganWebController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StokController;
 
@@ -37,7 +38,7 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::resource('produk', ProdukController::class);
 
     // Rute Pelanggan
-    Route::resource('pelanggan', PelangganController::class);
+    Route::get('/pelanggan', [PelangganWebController::class, 'index'])->name('pelanggan.index');
 
     // Rute Laporan
     Route::resource('reports', ReportController::class);

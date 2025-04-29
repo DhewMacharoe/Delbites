@@ -15,7 +15,7 @@
                     $table->id();
                     $table->unsignedBigInteger('id_pelanggan');
                     $table->unsignedBigInteger('admin_id')->nullable();
-                    $table->integer('total_harga');
+                    $table->decimal('total_harga', 10, 2);
                     $table->enum('metode_pembayaran', ['tunai', 'qris', 'transfer bank'])->default('tunai');
                     $table->string('bukti_pembayaran')->nullable();
                     $table->enum('status', ['menunggu', 'pembayaran', 'dibayar', 'diproses', 'selesai', 'dibatalkan'])->default('menunggu');
