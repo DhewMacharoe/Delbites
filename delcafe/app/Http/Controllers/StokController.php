@@ -14,19 +14,19 @@ class StokController extends Controller
     public function index(Request $request)
     {
         $query = StokBahan::with('admin');
-        
+
         // Filter berdasarkan satuan
         if ($request->has('satuan') && $request->satuan != '') {
             $query->where('satuan', $request->satuan);
         }
-        
+
         // Filter berdasarkan pencarian
         if ($request->has('search') && $request->search != '') {
             $query->where('nama_bahan', 'like', '%' . $request->search . '%');
         }
-        
-        $stok = $query->orderBy('nama_bahan')->paginate(10);
-        
+
+        $stok = $query->orderBy('id')->paginate(10);
+
         return view('stok.index', compact('stok'));
     }
 
@@ -48,12 +48,12 @@ class StokController extends Controller
             'jumlah' => 'required|integer|min:0',
             'satuan' => 'required|in:kg,liter,pcs,tandan,dus',
         ]);
-        
+
         $data = $request->all();
         $data['id_admin'] = Auth::id();
-        
+
         StokBahan::create($data);
-        
+
         return redirect()->route('stok.index')->with('success', 'Stok bahan berhasil ditambahkan.');
     }
 
@@ -85,10 +85,10 @@ class StokController extends Controller
             'jumlah' => 'required|integer|min:0',
             'satuan' => 'required|in:kg,liter,pcs,tandan,dus',
         ]);
-        
+
         $stok = StokBahan::findOrFail($id);
         $stok->update($request->all());
-        
+
         return redirect()->route('stok.index')->with('success', 'Stok bahan berhasil diperbarui.');
     }
 
@@ -99,7 +99,7 @@ class StokController extends Controller
     {
         $stok = StokBahan::findOrFail($id);
         $stok->delete();
-        
+
         return redirect()->route('stok.index')->with('success', 'Stok bahan berhasil dihapus.');
     }
 }
