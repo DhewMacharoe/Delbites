@@ -1,6 +1,7 @@
 import 'package:Delbites/firebase_options.dart';
 import 'package:Delbites/home.dart';
 import 'package:Delbites/login.dart';
+import 'package:Delbites/screens/payment/payment_status_pages.dart';
 import 'package:Delbites/register.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,20 @@ class MyApp extends StatelessWidget {
         "/login": (context) => MasukPage(),
         "/register": (context) => DaftarPage(),
         "/home": (context) => HomePage(),
+        "/payment-success": (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return PaymentSuccessPage(
+            orderId: args['order_id'],
+            transactionStatus: args['transaction_status'],
+          );
+        },
+        "/payment-failed": (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+          return PaymentFailedPage(
+            orderId: args['order_id'],
+          );
+        },
       },
     );
   }
-}
+} 

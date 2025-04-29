@@ -43,35 +43,35 @@ class ProdukController extends Controller
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
-    {
-        $request->validate([
-            'nama_menu' => 'required|string|max:50',
-            'kategori' => 'required|in:makanan,minuman',
-            'harga' => 'required|integer|min:0',
-            'stok' => 'required|integer|min:0',
-            'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-        ]);
+{
+    $request->validate([
+        'nama_menu' => 'required|string|max:50',
+        'kategori' => 'required|in:makanan,minuman',
+        'harga' => 'required|integer|min:0',
+        'stok' => 'required|integer|min:0',
+        'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+    ]);
 
-        $data = $request->all();
-        $data['id_admin'] = Auth::guard('admin')->id();
-        $data['stok_terjual'] = 0;
+    $data = $request->all();
+    $data['id_admin'] = Auth::guard('admin')->id();
+    $data['stok_terjual'] = 0;
 
-        // Upload gambar jika ada
-        if ($request->hasFile('gambar')) {
-            $gambar = $request->file('gambar');
-            $nama_file = time() . '_' . $gambar->getClientOriginalName();
+    if ($request->hasFile('gambar')) {
+        $gambar = $request->file('gambar');
+        $nama_file = time() . '_' . preg_replace('/\s+/', '_', $gambar->getClientOriginalName());
 
-            // Simpan gambar langsung ke direktori public
-            $gambar->move(public_path('storage/menu'), $nama_file);
+        // Simpan ke public/storage/menu
+        $gambar->move(public_path('storage/menu'), $nama_file);
 
-            // Simpan path relatif ke database
-            $data['gambar'] = 'menu/' . $nama_file;
-        }
-
-        Menu::create($data);
-
-        return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan.');
+        // Simpan path relatif
+        $data['gambar'] = 'menu/' . $nama_file;
     }
+
+    Menu::create($data);
+
+    return redirect()->route('produk.index')->with('success', 'Produk berhasil ditambahkan.');
+}
+
 
     /**
      * Display the specified resource.
@@ -103,31 +103,31 @@ class ProdukController extends Controller
             'stok' => 'required|integer|min:0',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
+    
         $produk = Menu::findOrFail($id);
         $data = $request->all();
-
-        // Upload gambar jika ada
+    
         if ($request->hasFile('gambar')) {
             // Hapus gambar lama jika ada
-            if ($produk->gambar) {
-                Storage::delete('public/menu/' . $produk->gambar);
+            if ($produk->gambar && file_exists(public_path('storage/' . $produk->gambar))) {
+                unlink(public_path('storage/' . $produk->gambar));
             }
-
+    
             $gambar = $request->file('gambar');
-            $nama_file = time() . '_' . $gambar->getClientOriginalName();
-
-            // Simpan gambar ke storage/app/public/menu
-            $gambar->storeAs('public/menu', $nama_file);
-
-            // Simpan nama file ke database
-            $data['gambar'] = $nama_file;
+            $nama_file = time() . '_' . preg_replace('/\s+/', '_', $gambar->getClientOriginalName());
+    
+            // Simpan ke public/storage/menu
+            $gambar->move(public_path('storage/menu'), $nama_file);
+    
+            // Simpan path relatif
+            $data['gambar'] = 'menu/' . $nama_file;
         }
-
+    
         $produk->update($data);
-
+    
         return redirect()->route('produk.index')->with('success', 'Produk berhasil diperbarui.');
     }
+    
 
     /**
      * Remove the specified resource from storage.

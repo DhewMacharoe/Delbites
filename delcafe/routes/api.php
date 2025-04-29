@@ -7,6 +7,10 @@ use App\Http\Controllers\Api\PemesananController;
 use App\Http\Controllers\Api\PelangganController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\KeranjangController;
+use App\Http\Controllers\MidtransController;
+use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\PaymentController;
+
 
 Route::get('/menu', [MenuController::class, 'index']);
 Route::get('/menu/{id}', [MenuController::class, 'show']);
@@ -43,3 +47,16 @@ Route::middleware('jwt.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
+
+
+// Route::middleware('auth:sanctum')->group(function () {
+//     Route::post('/pembayaran/create', [PembayaranController::class, 'createTransaction']);
+//     Route::get('/pembayaran/status', [PembayaranController::class, 'checkStatus']);
+//     Route::get('/pembayaran/{id_pemesanan}', [PembayaranController::class, 'getDetailPembayaran']);
+//     Route::post('/pemesanan/create', [PemesananController::class, 'create']);
+// });
+
+// Route untuk webhook Midtrans (tidak perlu auth)
+Route::post('/midtrans/create-transaction', [MidtransController::class, 'createTransaction']);
+Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'checkStatus']);
+Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);

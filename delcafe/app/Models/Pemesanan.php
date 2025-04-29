@@ -13,17 +13,11 @@ class Pemesanan extends Model
 
     protected $fillable = [
         'id_pelanggan',
-        'id_admin',
+        'admin_id',
         'total_harga',
         'metode_pembayaran',
         'bukti_pembayaran',
         'status',
-        // 'catatan',
-        'waktu_pemesanan',
-        'waktu_pengambilan',
-    ];
-
-    protected $dates = [
         'waktu_pemesanan',
         'waktu_pengambilan',
     ];
@@ -35,11 +29,16 @@ class Pemesanan extends Model
 
     public function admin()
     {
-        return $this->belongsTo(Admin::class, 'id_admin');
+        return $this->belongsTo(Admin::class, 'admin_id');
     }
 
-    public function detailPemesanans()
+    public function detailPemesanan()
     {
         return $this->hasMany(DetailPemesanan::class, 'id_pemesanan');
+    }
+
+    public function pembayaran()
+    {
+        return $this->hasOne(Pembayaran::class, 'id_pemesanan');
     }
 }

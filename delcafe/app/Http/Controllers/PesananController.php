@@ -35,9 +35,54 @@ class PesananController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        try {
+            // Validasi request
+            $request->validate([
+                'items' => 'required|array',
+                'items.*.nama_menu' => 'required|string',
+                'items.*.jumlah' => 'required|integer',
+                'items.*.harga' => 'required|integer',
+                'total_harga' => 'required|integer',
+                'metode_pembayaran' => 'required|string|in:tunai,qris,transfer bank,midtrans',
+            ]);
+
+            // Buat pesanan baru
+            $pemesanan = new Pemesanan();
+            $pemesanan->id_pelanggan = auth()->id;
+            $pemesanan->total_harga = $request->total_harga;
+            $pemesanan->status = 'menunggu';
+            $pemesanan->metode_pembayaran = $request->metode_pembayaran;
+            $pemesanan->waktu_pemesanan = now();
+            $pemesanan->save();
+
+            // Simpan detail pesanan
+            foreach ($request->items as $item) {
+                DetailPemesanan::create([
+                    'id_pemesanan' => $pemesanan->id,
+                    'id_menu' => $item['id_menu'] ?? 1,
+                    'jumlah' => $item['jumlah'],
+                    'harga_satuan' => $item['harga'],
+                    'subtotal' => $item['jumlah'] * $item['harga'],
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pesanan berhasil dibuat',
+                'data' => [
+                    'id' => $pemesanan->id,
+                    'status' => $pemesanan->status,
+                    'metode_pembayaran' => $pemesanan->metode_pembayaran,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membuat pesanan: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
     /**

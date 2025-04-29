@@ -1,5 +1,10 @@
+import 'package:Delbites/services/midtrans_service.dart';
+import 'package:Delbites/utils/payment_utils.dart';
 import 'package:Delbites/waiting_page.dart';
 import 'package:flutter/material.dart';
+import 'package:Delbites/midtrans_payment_page.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> pesanan;
@@ -12,6 +17,9 @@ class CheckoutPage extends StatefulWidget {
 
 class _CheckoutPageState extends State<CheckoutPage> {
   String? selectedPayment;
+  bool isLoading = false;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
 
   int getTotalHarga() {
     int total = 0;
@@ -22,6 +30,132 @@ class _CheckoutPageState extends State<CheckoutPage> {
               .toInt();
     }
     return total;
+  }
+
+  Future<void> processPayment() async {
+    if (selectedPayment == null) return;
+
+    if (selectedPayment == "Bayar langsung di kasir") {
+      processCashPayment();
+    } else {
+      await processMidtransPayment();
+    }
+  }
+
+  void processCashPayment() {
+    List<Map<String, String>> ordersToSend = widget.pesanan.map((item) {
+      return {
+        "name": item["name"].toString(),
+        "price": item["price"].toString(),
+        "quantity": item["quantity"].toString(),
+        "date": "Sekarang",
+        "status": "Menunggu",
+        "payment": selectedPayment!,
+      };
+    }).toList();
+
+    // Kosongkan keranjang
+    setState(() {
+      widget.pesanan.clear();
+    });
+
+    // Navigasi ke WaitingPage
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => WaitingPage(orders: ordersToSend),
+      ),
+    );
+  }
+
+  Future<void> processMidtransPayment() async {
+    if (nameController.text.isEmpty || emailController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan isi nama dan email'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      // 1. Generate Order ID
+      final String orderId = PaymentUtils.generateOrderId();
+
+      // 2. Ambil Total Harga
+      final int totalHarga = getTotalHarga();
+
+      // 3. Ambil daftar item dari pesanan
+      final List<Map<String, dynamic>> itemsList = widget.pesanan.map((item) {
+        return {
+          'id': item['id'].toString(),
+          'name': item['name'],
+          'price': PaymentUtils.parseRupiah(item['price']),
+          'quantity': item['quantity'],
+        };
+      }).toList();
+
+      // 4. Pecah nama depan dan belakang
+      final nameParts = PaymentUtils.splitName(nameController.text);
+
+      // 5. Kirim ke backend Laravel
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/midtrans/create-transaction'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'order_id': orderId.toString(),
+          'gross_amount': totalHarga,
+          'id_pemesanan': 1,
+          'first_name': (nameParts['firstName'] ?? 'User').toString(),
+          'last_name': (nameParts['lastName'] ?? '').toString(),
+          'email': emailController.text,
+          'items': itemsList,
+        }),
+      );
+
+      setState(() {
+        isLoading = false;
+      });
+
+      if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+
+        final String redirectUrl = result['redirect_url']?.toString() ?? '';
+        final String orderId = result['order_id']?.toString() ?? '';
+
+        // Buka halaman WebView pembayaran
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MidtransPaymentPage(
+              redirectUrl: redirectUrl,
+              orderId: orderId,
+            ),
+          ),
+        );
+      } else {
+        throw Exception("Gagal membuat transaksi: ${response.body}");
+      }
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Payment error: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
@@ -37,123 +171,134 @@ class _CheckoutPageState extends State<CheckoutPage> {
             'Bayar',
             style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
           ),
-          backgroundColor: Colors.blue[900],
+          backgroundColor: const Color(0xFF2D5EA2),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: () => _showCancelDialog(context),
           ),
         ),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Pembayaran',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 100,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
+        body: isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _paymentOption('Bayar langsung di kasir', Icons.store),
-                    _paymentOption(
-                        'Transfer ke Mandiri', Icons.account_balance),
-                    _paymentOption('Transfer ke Dana', Icons.payment),
+                    const Text(
+                      'Pembayaran',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 100,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _paymentOption(
+                              'Bayar langsung di kasir', Icons.store),
+                          _paymentOption(
+                              'Midtrans - Credit Card', Icons.credit_card),
+                          _paymentOption('Midtrans - Bank Transfer',
+                              Icons.account_balance),
+                          _paymentOption('Midtrans - GoPay', Icons.payment),
+                        ],
+                      ),
+                    ),
+                    if (selectedPayment != null &&
+                        selectedPayment != 'Bayar langsung di kasir')
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Customer Information',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: nameController,
+                              decoration: const InputDecoration(
+                                labelText: 'Full Name',
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: emailController,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                border: OutlineInputBorder(),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    const Text(
+                      'Pesanan',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 10),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: widget.pesanan.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            child: ListTile(
+                              leading: const Icon(Icons.fastfood, size: 40),
+                              title: Text(widget.pesanan[index]['name']),
+                              subtitle: Text(
+                                '${widget.pesanan[index]['price']} x ${widget.pesanan[index]['quantity']}',
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Total Harga',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Text(
+                          PaymentUtils.formatToRupiah(getTotalHarga()),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed:
+                            selectedPayment == null ? null : processPayment,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: selectedPayment == null
+                              ? Colors.grey
+                              : const Color(0xFF2D5EA2),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        child: Text(
+                          selectedPayment == null
+                              ? 'Pilih Pembayaran'
+                              : 'Bayar dengan $selectedPayment',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                'Pesanan',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 10),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: widget.pesanan.length,
-                  itemBuilder: (context, index) {
-                    return Card(
-                      child: ListTile(
-                        leading: const Icon(Icons.fastfood, size: 40),
-                        title: Text(widget.pesanan[index]['name']),
-                        subtitle: Text(
-                          'Rp ${widget.pesanan[index]['price']} x ${widget.pesanan[index]['quantity']}',
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Total Harga',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                  Text(
-                    'Rp ${getTotalHarga()}',
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: selectedPayment == null
-                      ? null
-                      : () {
-                          if (selectedPayment == "Bayar langsung di kasir") {
-                            List<Map<String, String>> ordersToSend =
-                                widget.pesanan.map((item) {
-                              return {
-                                "name": item["name"].toString(),
-                                "price": item["price"].toString(),
-                                "quantity": item["quantity"].toString(),
-                                "date": "Sekarang",
-                                "status": "Menunggu",
-                                "payment": selectedPayment!,
-                              };
-                            }).toList();
-
-                            // Kosongkan keranjang
-                            setState(() {
-                              widget.pesanan.clear();
-                            });
-
-                            // Navigasi ke WaitingPage
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    WaitingPage(orders: ordersToSend),
-                              ),
-                            );
-                          }
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: selectedPayment == null
-                        ? Colors.grey
-                        : Colors.blue[900],
-                    minimumSize: const Size(double.infinity, 50),
-                  ),
-                  child: Text(
-                    selectedPayment == null
-                        ? 'Pilih Pembayaran'
-                        : 'Bayar dengan $selectedPayment',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -173,14 +318,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
             border: Border.all(
-              color: selectedPayment == title ? Colors.blue[900]! : Colors.grey,
+              color: selectedPayment == title
+                  ? const Color(0xFF2D5EA2)
+                  : Colors.grey,
               width: selectedPayment == title ? 2 : 1,
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 30, color: Colors.blue[900]),
+              Icon(icon, size: 30, color: const Color(0xFF2D5EA2)),
               const SizedBox(height: 5),
               Text(
                 title,
