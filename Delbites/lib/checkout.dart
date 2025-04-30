@@ -1,9 +1,10 @@
+import 'dart:convert';
+
+import 'package:Delbites/midtrans_payment_page.dart';
 import 'package:Delbites/services/midtrans_service.dart';
 import 'package:Delbites/utils/payment_utils.dart';
 import 'package:Delbites/waiting_page.dart';
 import 'package:flutter/material.dart';
-import 'package:Delbites/midtrans_payment_page.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class CheckoutPage extends StatefulWidget {
@@ -197,11 +198,10 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           _paymentOption(
                               'Bayar langsung di kasir', Icons.store),
+                          _paymentOption('Credit Card', Icons.credit_card),
                           _paymentOption(
-                              'Midtrans - Credit Card', Icons.credit_card),
-                          _paymentOption('Midtrans - Bank Transfer',
-                              Icons.account_balance),
-                          _paymentOption('Midtrans - GoPay', Icons.payment),
+                              'Bank Transfer', Icons.account_balance),
+                          _paymentOption('GoPay', Icons.payment),
                         ],
                       ),
                     ),

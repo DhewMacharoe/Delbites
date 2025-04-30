@@ -91,7 +91,7 @@
             <th class="right">Harga</th>
             <th class="right">Subtotal</th>
         </tr>
-        @foreach($order->detailPemesanans as $item)
+        @foreach($order->detailPemesanan as $item)
         <tr>
             <td>{{ $item->menu->nama_menu }}</td>
             <td class="right">{{ $item->jumlah }}</td>

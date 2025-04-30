@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
     <title>Struk Pesanan #{{ $pesanan->id }}</title>
@@ -12,39 +13,49 @@
             margin: 0 auto;
             padding: 5mm;
         }
+
         .header {
             text-align: center;
             margin-bottom: 10px;
         }
+
         .header h1 {
             font-size: 18px;
             margin: 0;
             padding: 0;
         }
+
         .header h2 {
             font-size: 14px;
             margin: 5px 0;
             padding: 0;
         }
+
         .header p {
             margin: 2px 0;
             padding: 0;
         }
+
         .divider {
             border-top: 1px dashed #000;
             margin: 10px 0;
         }
+
         table {
             width: 100%;
             border-collapse: collapse;
         }
-        th, td {
+
+        th,
+        td {
             text-align: left;
             padding: 2px 0;
         }
+
         .right {
             text-align: right;
         }
+
         .footer {
             text-align: center;
             margin-top: 10px;
@@ -52,6 +63,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="header">
         <h1>DELBITES</h1>
@@ -64,14 +76,14 @@
         <p>Kasir: Admin</p>
         <p>================================</p>
     </div>
-    
+
     <table>
         <tr>
             <td colspan="2">Pelanggan: {{ $pesanan->pelanggan->nama }}</td>
         </tr>
         <tr>
-            <td colspan="2">Pembayaran: 
-                @if($pesanan->metode_pembayaran == 'tunai')
+            <td colspan="2">Pembayaran:
+                @if ($pesanan->metode_pembayaran == 'tunai')
                     Tunai
                 @elseif($pesanan->metode_pembayaran == 'qris')
                     QRIS
@@ -81,9 +93,9 @@
             </td>
         </tr>
     </table>
-    
+
     <div class="divider"></div>
-    
+
     <table>
         <tr>
             <th>Item</th>
@@ -91,30 +103,31 @@
             <th class="right">Harga</th>
             <th class="right">Subtotal</th>
         </tr>
-        @foreach($pesanan->detailPemesanans as $item)
-        <tr>
-            <td>{{ $item->menu->nama_menu }}</td>
-            <td class="right">{{ $item->jumlah }}</td>
-            <td class="right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
-            <td class="right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
-        </tr>
+        @foreach ($pesanan->detailPemesanan as $item)
+            <tr>
+                <td>{{ $item->menu->nama_menu }}</td>
+                <td class="right">{{ $item->jumlah }}</td>
+                <td class="right">{{ number_format($item->harga_satuan, 0, ',', '.') }}</td>
+                <td class="right">{{ number_format($item->subtotal, 0, ',', '.') }}</td>
+            </tr>
         @endforeach
     </table>
-    
+
     <div class="divider"></div>
-    
+
     <table>
         <tr>
             <th>TOTAL</th>
             <th class="right">Rp {{ number_format($pesanan->total_harga, 0, ',', '.') }}</th>
         </tr>
     </table>
-    
+
     <div class="divider"></div>
-    
+
     <div class="footer">
         <p>Terima kasih atas kunjungan Anda!</p>
         <p>&copy; Delbites 2025</p>
     </div>
 </body>
+
 </html>
