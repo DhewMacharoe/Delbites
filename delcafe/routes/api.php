@@ -60,3 +60,6 @@ Route::middleware('jwt.auth')->group(function () {
 Route::post('/midtrans/create-transaction', [MidtransController::class, 'createTransaction']);
 Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'checkStatus']);
 Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
+
+Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
+Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);

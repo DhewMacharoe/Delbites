@@ -1,6 +1,6 @@
 import 'package:Delbites/services/firebase_service.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:Delbites/services/auth_services.dart';
 
 class MasukPage extends StatefulWidget {
   const MasukPage({Key? key}) : super(key: key);
@@ -12,50 +12,59 @@ class MasukPage extends StatefulWidget {
 class _MasukPageState extends State<MasukPage> {
   final _phoneController = TextEditingController();
   String _otp = '';
+  String _verificationId = '';
   bool _isOtpSent = false;
+
   final FirebaseService _firebaseService = FirebaseService();
 
   void _sendOtp() async {
-    String phoneNumber = _phoneController.text;
-    bool success = await _firebaseService.sendOTP(phoneNumber);
+    String phoneNumber = _phoneController.text.trim();
 
-    if (success) {
-      setState(() {
-        _isOtpSent = true;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to send OTP. Please try again.'),
-      ));
-    }
+    // Kirim OTP dan simpan verificationId dari Firebase
+    await _firebaseService.sendOTP(
+      phoneNumber: phoneNumber,
+      onCodeSent: (verificationId) {
+        setState(() {
+          _verificationId = verificationId;
+          _isOtpSent = true;
+        });
+      },
+      onError: (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Gagal kirim OTP: $error')),
+        );
+      },
+    );
   }
 
   void _verifyOtp() async {
-  bool success = await _firebaseService.verifyOTP(_otp);
+    final success = await AuthService.verifyOTPAndLogin(
+      otp: _otp,
+      phone: _phoneController.text.trim(),
+      verificationId: _verificationId,
+      nama: '', // kosong saat login
+    );
 
-  if (success) {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', true); // simpan status login
-
-    Navigator.pushReplacementNamed(context, "/home");
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('OTP verification failed. Please try again.'),
-    ));
+    if (success) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login gagal. Periksa OTP atau nomor HP")),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Masuk')),
+      appBar: AppBar(title: const Text('Masuk')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _phoneController,
-              decoration: InputDecoration(labelText: 'Nomor Telepon'),
+              decoration: const InputDecoration(labelText: 'Nomor Telepon'),
               keyboardType: TextInputType.phone,
             ),
             if (_isOtpSent)
@@ -65,10 +74,10 @@ class _MasukPageState extends State<MasukPage> {
                     _otp = value;
                   });
                 },
-                decoration: InputDecoration(labelText: 'Kode OTP'),
+                decoration: const InputDecoration(labelText: 'Kode OTP'),
                 keyboardType: TextInputType.number,
               ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isOtpSent ? _verifyOtp : _sendOtp,
               child: Text(_isOtpSent ? 'Verifikasi OTP' : 'Kirim OTP'),
@@ -77,7 +86,13 @@ class _MasukPageState extends State<MasukPage> {
               onPressed: () {
                 Navigator.pushNamed(context, "/register");
               },
-              child: Text("Belum punya akun? Daftar"),
+              child: const Text("Belum punya akun? Daftar"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pushNamed(context, "/login-manual");
+              },
+              child: const Text("Login dengan password"),
             ),
           ],
         ),

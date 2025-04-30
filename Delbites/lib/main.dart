@@ -6,6 +6,7 @@ import 'package:Delbites/register.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:Delbites/login_manual.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
       initialRoute: isLoggedIn ? "/home" : "/login",
       routes: {
         "/login": (context) => MasukPage(),
+        '/login-manual': (context) => const LoginManualPage(),
         "/register": (context) => DaftarPage(),
         "/home": (context) => HomePage(),
         "/payment-success": (context) {
