@@ -1,7 +1,6 @@
-import 'package:Delbites/services/database_service.dart';
-import 'package:Delbites/services/firebase_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:Delbites/services/auth_services.dart';
 
 class DaftarPage extends StatefulWidget {
   const DaftarPage({Key? key}) : super(key: key);
@@ -11,43 +10,75 @@ class DaftarPage extends StatefulWidget {
 }
 
 class _DaftarPageState extends State<DaftarPage> {
+  String _otp = '';
+  String _verificationId = '';
   final _phoneController = TextEditingController();
   final _usernameController = TextEditingController();
-  final FirebaseService _firebaseService = FirebaseService();
-  final DatabaseService _databaseService = DatabaseService();
-  String _otp = '';
   bool _isOtpSent = false;
 
   void _sendOtp() async {
-    String phoneNumber = _phoneController.text;
-    bool success = await _firebaseService.sendOTP(phoneNumber);
+    final phoneNumber = _phoneController.text.trim();
 
-    if (success) {
-      setState(() {
-        _isOtpSent = true;
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to send OTP. Please try again.'),
-      ));
+    if (!phoneNumber.startsWith('+62')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Gunakan format nomor internasional (+62...)')),
+      );
+      return;
     }
+
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      timeout: const Duration(seconds: 60),
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        // Login otomatis jika OTP terisi otomatis
+        await FirebaseAuth.instance.signInWithCredential(credential);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Verifikasi gagal: ${e.message}')),
+        );
+      },
+      codeSent: (String verificationId, int? resendToken) {
+        setState(() {
+          _verificationId = verificationId;
+          _isOtpSent = true;
+        });
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _verificationId = verificationId;
+      },
+    );
   }
 
   void _verifyOtp() async {
-    bool success = await _firebaseService.verifyOTP(_otp);
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: _verificationId,
+        smsCode: _otp,
+      );
 
-    if (success) {
-      String username = _usernameController.text;
-      String phoneNumber = _phoneController.text;
-      User user = FirebaseAuth.instance.currentUser!;
+      await FirebaseAuth.instance.signInWithCredential(credential);
 
-      await _databaseService.saveUser(user.uid, phoneNumber, username);
+      // Kirim ke Laravel
+      final success = await AuthService.verifyOTPAndLogin(
+        otp: _otp,
+        phone: _phoneController.text.trim(),
+        verificationId: _verificationId,
+        nama: _usernameController.text.trim(), // hanya saat register
+      );
 
-      Navigator.pushReplacementNamed(context, "/home");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('OTP verification failed. Please try again.'),
-      ));
+      if (success) {
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login Laravel gagal.")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("OTP salah atau kadaluarsa: $e")),
+      );
     }
   }
 

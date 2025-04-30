@@ -13,3 +13,6 @@ Run Step By Step
 di laravel: php artisan serve --host=127.0.0.1 --port=8000
 di cmd : adb reverse tcp:8000 tcp:8000
 di flutter : flutter pub get
+
+## untuk midtrans 
+1. composer require midtrans/midtrans-php

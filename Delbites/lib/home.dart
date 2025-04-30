@@ -7,6 +7,7 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 const String baseUrl = 'http://127.0.0.1:8000';
 
@@ -134,7 +135,7 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 children: [
                   const Text(
-                    'Selamat Datang di Del Cafe',
+                    'Selamat Datang di DelBites',
                     style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -162,7 +163,12 @@ class _HomePageState extends State<HomePage> {
                           child: const Text("Batal"),
                         ),
                         TextButton(
-                          onPressed: () => SystemNavigator.pop(),
+                          onPressed: () async {
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.clear(); // hapus semua data login
+                            Navigator.of(context).pushNamedAndRemoveUntil(
+                                '/login', (route) => false);
+                          },
                           child: const Text("Logout"),
                         ),
                       ],

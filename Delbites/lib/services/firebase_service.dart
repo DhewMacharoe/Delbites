@@ -2,35 +2,42 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  String _verificationId = '';
 
-  Future<bool> sendOTP(String phoneNumber) async {
+  /// Kirim OTP dan panggil onCodeSent jika sukses
+  Future<void> sendOTP({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(String error) onError,
+  }) async {
     try {
       await _auth.verifyPhoneNumber(
         phoneNumber: phoneNumber,
-        timeout: Duration(seconds: 60),
+        timeout: const Duration(seconds: 60),
         verificationCompleted: (PhoneAuthCredential credential) async {
           await _auth.signInWithCredential(credential);
         },
         verificationFailed: (FirebaseAuthException e) {
-          print('Error: ${e.message}');
+          print('Verifikasi gagal: ${e.message}');
+          onError(e.message ?? 'Verifikasi gagal');
         },
         codeSent: (String verificationId, int? resendToken) {
-          _verificationId = verificationId;
+          onCodeSent(verificationId);
         },
-        codeAutoRetrievalTimeout: (String verificationId) {},
+        codeAutoRetrievalTimeout: (String verificationId) {
+          onCodeSent(verificationId); // tetap kirim saat timeout
+        },
       );
-      return true;
     } catch (e) {
-      print('Error sending OTP: $e');
-      return false;
+      print('Error sendOTP: $e');
+      onError(e.toString());
     }
   }
 
-  Future<bool> verifyOTP(String otp) async {
+  /// Verifikasi OTP secara manual (kalau user input sendiri)
+  Future<bool> verifyOTP(String otp, String verificationId) async {
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: _verificationId,
+        verificationId: verificationId,
         smsCode: otp,
       );
       await _auth.signInWithCredential(credential);
@@ -41,8 +48,16 @@ class FirebaseService {
     }
   }
 
-  // Resend OTP
-  Future<bool> resendOTP(String phoneNumber) async {
-    return await sendOTP(phoneNumber);
+  /// Kirim ulang OTP (gunakan fungsi sendOTP lagi)
+  Future<void> resendOTP({
+    required String phoneNumber,
+    required Function(String verificationId) onCodeSent,
+    required Function(String error) onError,
+  }) async {
+    await sendOTP(
+      phoneNumber: phoneNumber,
+      onCodeSent: onCodeSent,
+      onError: onError,
+    );
   }
 }

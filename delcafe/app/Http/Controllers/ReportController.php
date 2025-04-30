@@ -8,9 +8,8 @@ use App\Models\Pemesanan;
 use App\Models\Menu;
 use App\Models\DetailPemesanan;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
-
-
 class ReportController extends Controller
 {
     /**
