@@ -61,5 +61,6 @@ Route::post('/midtrans/create-transaction', [MidtransController::class, 'createT
 Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'checkStatus']);
 Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
 
-Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
-Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);
+// Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
+// Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);
+Route::post('/pelanggan', [PelangganController::class, 'store']);

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 const String baseUrl = 'http://127.0.0.1:8000';
 
@@ -383,21 +384,62 @@ class MenuCard extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () async {
                           if (tempName.isNotEmpty && tempPhone.isNotEmpty) {
-                            await prefs.setString('nama_pelanggan', tempName);
-                            await prefs.setString(
-                                'telepon_pelanggan', tempPhone);
-                            Navigator.pop(context);
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => MenuDetail(
-                                  name: item['name']!,
-                                  price: item['price']!,
-                                  imageUrl: "$baseUrl/storage/${item['image']}",
-                                  menuId: int.parse(item['id']!),
-                                ),
-                              ),
-                            );
+                            try {
+                              final response = await http.post(
+                                Uri.parse('$baseUrl/api/pelanggan'),
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Accept': 'application/json',
+                                },
+                                body: jsonEncode({
+                                  'nama': tempName,
+                                  'telepon': tempPhone,
+                                }),
+                              );
+
+                              if (response.statusCode == 200 ||
+                                  response.statusCode == 201) {
+                                final data = jsonDecode(response.body);
+                                final idPelanggan = data['id'];
+
+                                SharedPreferences prefs =
+                                    await SharedPreferences.getInstance();
+                                await prefs.setInt('id_pelanggan', idPelanggan);
+                                await prefs.setString(
+                                    'nama_pelanggan', tempName);
+                                await prefs.setString(
+                                    'telepon_pelanggan', tempPhone);
+
+                                Navigator.pop(context);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => MenuDetail(
+                                      name: item['name']!,
+                                      price: item['price']!,
+                                      imageUrl:
+                                          "$baseUrl/storage/${item['image']}",
+                                      menuId: int.parse(item['id']!),
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                print(
+                                    'Gagal menyimpan pelanggan: ${response.body}');
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content:
+                                          Text('Gagal menyimpan pelanggan')),
+                                );
+                              }
+                            } catch (e) {
+                              print('Exception: $e');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Terjadi kesalahan jaringan')),
+                              );
+                            }
                           }
                         },
                         child: const Text('Lanjutkan'),
