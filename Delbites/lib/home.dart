@@ -1,4 +1,3 @@
-// semua import tetap
 import 'dart:convert';
 
 import 'package:Delbites/keranjang.dart';
@@ -54,7 +53,7 @@ class _HomePageState extends State<HomePage> {
             .compareTo(int.parse(a['stok_terjual']!)));
 
         setState(() {
-          displayedItems = allItems.take(8).toList();
+          displayedItems = _getFilteredItems();
           isLoading = false;
         });
       } else {
@@ -68,55 +67,40 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void filterCategory(String category) {
-    selectedCategory = category;
+  // Fungsi untuk memfilter menu berdasarkan kategori dan pencarian
+  List<Map<String, String>> _getFilteredItems() {
+    List<Map<String, String>> filtered = allItems.where((item) {
+      // Filter berdasarkan kategori dan stok
+      bool matchesCategory = selectedCategory == 'Rekomendasi' ||
+          item['kategori'] == selectedCategory;
+      bool matchesSearch =
+          item['name']!.toLowerCase().contains(searchQuery.toLowerCase());
+      bool hasStock = int.parse(item['stok']!) > 0;
+
+      return matchesCategory && matchesSearch && hasStock;
+    }).toList();
+
+    // Menjaga urutan berdasarkan stok terjual
+    filtered.sort((a, b) =>
+        int.parse(b['stok_terjual']!).compareTo(int.parse(a['stok_terjual']!)));
+
+    return filtered.take(8).toList();
+  }
+
+  // Fungsi untuk memperbarui pencarian
+  void applySearch(String query) {
     setState(() {
-      if (category == 'Rekomendasi') {
-        displayedItems = allItems
-            .where((item) => int.parse(item['stok']!) > 0)
-            .toList()
-          ..sort((a, b) => int.parse(b['stok_terjual']!)
-              .compareTo(int.parse(a['stok_terjual']!)));
-        displayedItems = displayedItems.take(8).toList();
-      } else {
-        displayedItems =
-            allItems.where((item) => item['kategori'] == category).toList();
-      }
-      if (searchQuery.isNotEmpty) {
-        applySearch(searchQuery, updateState: false);
-      }
+      searchQuery = query;
+      displayedItems = _getFilteredItems();
     });
   }
 
-  void applySearch(String query, {bool updateState = true}) {
-    List<Map<String, String>> sourceItems;
-    if (selectedCategory == 'Rekomendasi') {
-      sourceItems = allItems
-          .where((item) => int.parse(item['stok']!) > 0)
-          .toList()
-        ..sort((a, b) => int.parse(b['stok_terjual']!)
-            .compareTo(int.parse(a['stok_terjual']!)));
-      sourceItems = sourceItems.take(8).toList();
-    } else {
-      sourceItems = allItems
-          .where((item) => item['kategori'] == selectedCategory)
-          .toList();
-    }
-
-    final filtered = sourceItems
-        .where((item) =>
-            int.parse(item['stok']!) > 0 &&
-            item['name']!.toLowerCase().contains(query.toLowerCase()))
-        .toList();
-
-    if (updateState) {
-      setState(() {
-        searchQuery = query;
-        displayedItems = filtered;
-      });
-    } else {
-      displayedItems = filtered;
-    }
+  // Fungsi untuk memperbarui kategori
+  void filterCategory(String category) {
+    setState(() {
+      selectedCategory = category;
+      displayedItems = _getFilteredItems();
+    });
   }
 
   @override
@@ -230,9 +214,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     setState(() {
                       searchQuery = '';
-                      displayedItems = allItems
-                          .where((item) => int.parse(item['stok']!) > 0)
-                          .toList();
+                      displayedItems = _getFilteredItems();
                     });
                   },
                 )
@@ -254,10 +236,10 @@ class _HomePageState extends State<HomePage> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: const [
-            CategoryButton(label: "Rekomendasi"),
-            CategoryButton(label: "makanan"),
-            CategoryButton(label: "minuman"),
+          children: [
+            CategoryButton(label: "Rekomendasi", onPressed: filterCategory),
+            CategoryButton(label: "makanan", onPressed: filterCategory),
+            CategoryButton(label: "minuman", onPressed: filterCategory),
           ],
         ),
       ),
@@ -316,22 +298,29 @@ class _HomePageState extends State<HomePage> {
 
 class CategoryButton extends StatelessWidget {
   final String label;
-  const CategoryButton({Key? key, required this.label}) : super(key: key);
+  final Function(String) onPressed;
+  const CategoryButton({Key? key, required this.label, required this.onPressed})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final _HomePageState? homeState =
         context.findAncestorStateOfType<_HomePageState>();
+    bool isSelected =
+        homeState?.selectedCategory == label; // Menandai kategori yang dipilih
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ElevatedButton(
-        onPressed: () => homeState?.filterCategory(label),
+        onPressed: () => onPressed(label),
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D5EA2),
+          backgroundColor:
+              isSelected ? const Color(0xFF2D5EA2) : Colors.grey[300],
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: Text(label, style: const TextStyle(color: Colors.white)),
+        child: Text(label,
+            style: TextStyle(color: isSelected ? Colors.white : Colors.black)),
       ),
     );
   }
@@ -494,45 +483,20 @@ class MenuCard extends StatelessWidget {
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      item['name']!,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                    Text(item['name']!,
+                        style: const TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(
-                      'Rp ${item['price']}',
-                      style: const TextStyle(
-                        color: Color(0xFF2D5EA2),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    Text('Rp ${item['price']}',
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.green)),
                   ],
                 ),
               ),
-              if (isOutOfStock)
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 8.0),
-                  child: Center(
-                    child: Text(
-                      'Habis',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
             ],
           ),
         ),
