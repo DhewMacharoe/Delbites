@@ -1,3 +1,4 @@
+// semua import tetap
 import 'dart:convert';
 
 import 'package:Delbites/keranjang.dart';
@@ -8,9 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
-const String baseUrl = 'http://127.0.0.1:8000';
+const String baseUrl = 'http://10.0.2.2:8000';
+// const String baseUrl = 'http://127.0.0.1:8000';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -53,7 +54,7 @@ class _HomePageState extends State<HomePage> {
             .compareTo(int.parse(a['stok_terjual']!)));
 
         setState(() {
-          displayedItems = _getFilteredItems();
+          displayedItems = allItems.take(8).toList();
           isLoading = false;
         });
       } else {
@@ -67,40 +68,55 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Fungsi untuk memfilter menu berdasarkan kategori dan pencarian
-  List<Map<String, String>> _getFilteredItems() {
-    List<Map<String, String>> filtered = allItems.where((item) {
-      // Filter berdasarkan kategori dan stok
-      bool matchesCategory = selectedCategory == 'Rekomendasi' ||
-          item['kategori'] == selectedCategory;
-      bool matchesSearch =
-          item['name']!.toLowerCase().contains(searchQuery.toLowerCase());
-      bool hasStock = int.parse(item['stok']!) > 0;
-
-      return matchesCategory && matchesSearch && hasStock;
-    }).toList();
-
-    // Menjaga urutan berdasarkan stok terjual
-    filtered.sort((a, b) =>
-        int.parse(b['stok_terjual']!).compareTo(int.parse(a['stok_terjual']!)));
-
-    return filtered.take(8).toList();
-  }
-
-  // Fungsi untuk memperbarui pencarian
-  void applySearch(String query) {
-    setState(() {
-      searchQuery = query;
-      displayedItems = _getFilteredItems();
-    });
-  }
-
-  // Fungsi untuk memperbarui kategori
   void filterCategory(String category) {
+    selectedCategory = category;
     setState(() {
-      selectedCategory = category;
-      displayedItems = _getFilteredItems();
+      if (category == 'Rekomendasi') {
+        displayedItems = allItems
+            .where((item) => int.parse(item['stok']!) > 0)
+            .toList()
+          ..sort((a, b) => int.parse(b['stok_terjual']!)
+              .compareTo(int.parse(a['stok_terjual']!)));
+        displayedItems = displayedItems.take(8).toList();
+      } else {
+        displayedItems =
+            allItems.where((item) => item['kategori'] == category).toList();
+      }
+      if (searchQuery.isNotEmpty) {
+        applySearch(searchQuery, updateState: false);
+      }
     });
+  }
+
+  void applySearch(String query, {bool updateState = true}) {
+    List<Map<String, String>> sourceItems;
+    if (selectedCategory == 'Rekomendasi') {
+      sourceItems = allItems
+          .where((item) => int.parse(item['stok']!) > 0)
+          .toList()
+        ..sort((a, b) => int.parse(b['stok_terjual']!)
+            .compareTo(int.parse(a['stok_terjual']!)));
+      sourceItems = sourceItems.take(8).toList();
+    } else {
+      sourceItems = allItems
+          .where((item) => item['kategori'] == selectedCategory)
+          .toList();
+    }
+
+    final filtered = sourceItems
+        .where((item) =>
+            int.parse(item['stok']!) > 0 &&
+            item['name']!.toLowerCase().contains(query.toLowerCase()))
+        .toList();
+
+    if (updateState) {
+      setState(() {
+        searchQuery = query;
+        displayedItems = filtered;
+      });
+    } else {
+      displayedItems = filtered;
+    }
   }
 
   @override
@@ -214,7 +230,9 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {
                     setState(() {
                       searchQuery = '';
-                      displayedItems = _getFilteredItems();
+                      displayedItems = allItems
+                          .where((item) => int.parse(item['stok']!) > 0)
+                          .toList();
                     });
                   },
                 )
@@ -236,10 +254,10 @@ class _HomePageState extends State<HomePage> {
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: [
-            CategoryButton(label: "Rekomendasi", onPressed: filterCategory),
-            CategoryButton(label: "makanan", onPressed: filterCategory),
-            CategoryButton(label: "minuman", onPressed: filterCategory),
+          children: const [
+            CategoryButton(label: "Rekomendasi"),
+            CategoryButton(label: "makanan"),
+            CategoryButton(label: "minuman"),
           ],
         ),
       ),
@@ -298,29 +316,22 @@ class _HomePageState extends State<HomePage> {
 
 class CategoryButton extends StatelessWidget {
   final String label;
-  final Function(String) onPressed;
-  const CategoryButton({Key? key, required this.label, required this.onPressed})
-      : super(key: key);
+  const CategoryButton({Key? key, required this.label}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     final _HomePageState? homeState =
         context.findAncestorStateOfType<_HomePageState>();
-    bool isSelected =
-        homeState?.selectedCategory == label; // Menandai kategori yang dipilih
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ElevatedButton(
-        onPressed: () => onPressed(label),
+        onPressed: () => homeState?.filterCategory(label),
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              isSelected ? const Color(0xFF2D5EA2) : Colors.grey[300],
+          backgroundColor: const Color(0xFF2D5EA2),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
-        child: Text(label,
-            style: TextStyle(color: isSelected ? Colors.white : Colors.black)),
+        child: Text(label, style: const TextStyle(color: Colors.white)),
       ),
     );
   }
@@ -483,20 +494,45 @@ class MenuCard extends StatelessWidget {
               ),
               Padding(
                 padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(item['name']!,
-                        style: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text(
+                      item['name']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     const SizedBox(height: 4),
-                    Text('Rp ${item['price']}',
-                        style:
-                            const TextStyle(fontSize: 12, color: Colors.green)),
+                    Text(
+                      'Rp ${item['price']}',
+                      style: const TextStyle(
+                        color: Color(0xFF2D5EA2),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
+              if (isOutOfStock)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Center(
+                    child: Text(
+                      'Habis',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
