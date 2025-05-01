@@ -1,3 +1,4 @@
+// semua import tetap
 import 'dart:convert';
 
 import 'package:Delbites/keranjang.dart';
@@ -23,6 +24,7 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, String>> displayedItems = [];
   bool isLoading = true;
   String searchQuery = '';
+  String selectedCategory = 'Rekomendasi';
 
   @override
   void initState() {
@@ -47,11 +49,9 @@ class _HomePageState extends State<HomePage> {
                 })
             .toList();
 
-        // Sort the items based on stok_terjual in descending order
         allItems.sort((a, b) => int.parse(b['stok_terjual']!)
             .compareTo(int.parse(a['stok_terjual']!)));
 
-        // Select the top 8 items based on the highest number of sold items
         setState(() {
           displayedItems = allItems.take(8).toList();
           isLoading = false;
@@ -68,13 +68,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void filterCategory(String category) {
+    selectedCategory = category;
     setState(() {
       if (category == 'Rekomendasi') {
         displayedItems = allItems
             .where((item) => int.parse(item['stok']!) > 0)
             .toList()
-          ..sort((a, b) => int.parse(b['jumlah_terjual']!)
-              .compareTo(int.parse(a['jumlah_terjual']!)));
+          ..sort((a, b) => int.parse(b['stok_terjual']!)
+              .compareTo(int.parse(a['stok_terjual']!)));
         displayedItems = displayedItems.take(8).toList();
       } else {
         displayedItems =
@@ -87,10 +88,26 @@ class _HomePageState extends State<HomePage> {
   }
 
   void applySearch(String query, {bool updateState = true}) {
-    final filtered = displayedItems
-        .where(
-            (item) => item['name']!.toLowerCase().contains(query.toLowerCase()))
+    List<Map<String, String>> sourceItems;
+    if (selectedCategory == 'Rekomendasi') {
+      sourceItems = allItems
+          .where((item) => int.parse(item['stok']!) > 0)
+          .toList()
+        ..sort((a, b) => int.parse(b['stok_terjual']!)
+            .compareTo(int.parse(a['stok_terjual']!)));
+      sourceItems = sourceItems.take(8).toList();
+    } else {
+      sourceItems = allItems
+          .where((item) => item['kategori'] == selectedCategory)
+          .toList();
+    }
+
+    final filtered = sourceItems
+        .where((item) =>
+            int.parse(item['stok']!) > 0 &&
+            item['name']!.toLowerCase().contains(query.toLowerCase()))
         .toList();
+
     if (updateState) {
       setState(() {
         searchQuery = query;
@@ -104,20 +121,33 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: [
-          _buildHeader(),
-          _buildSearchBar(),
-          _buildCategorySelector(),
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : RefreshIndicator(
-                    onRefresh: fetchMenu,
-                    child: _buildMenuGrid(),
-                  ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.white, Color(0xFFE6EBF5)],
           ),
-        ],
+        ),
+        child: Column(
+          children: [
+            _buildHeader(),
+            _buildSearchBar(),
+            _buildCategorySelector(),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            ),
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : RefreshIndicator(
+                      onRefresh: fetchMenu,
+                      child: _buildMenuGrid(),
+                    ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomNavigation(),
     );
@@ -163,11 +193,13 @@ class _HomePageState extends State<HomePage> {
                           child: const Text("Batal"),
                         ),
                         TextButton(
-                          onPressed: () async {
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.clear(); // hapus semua data login
-                            Navigator.of(context).pushNamedAndRemoveUntil(
-                                '/login', (route) => false);
+                          onPressed: () {
+                            Navigator.pop(context); // tutup dialog
+                            Future.delayed(const Duration(milliseconds: 100),
+                                () {
+                              // beri delay agar dialog benar-benar tertutup dulu
+                              Future.microtask(() => SystemNavigator.pop());
+                            });
                           },
                           child: const Text("Logout"),
                         ),
@@ -235,10 +267,11 @@ class _HomePageState extends State<HomePage> {
     return GridView.builder(
       padding: const EdgeInsets.all(15),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 15,
-          mainAxisSpacing: 15,
-          childAspectRatio: 0.75),
+        crossAxisCount: 2,
+        crossAxisSpacing: 15,
+        mainAxisSpacing: 15,
+        childAspectRatio: 0.75,
+      ),
       itemCount: displayedItems.length,
       itemBuilder: (context, index) {
         final item = displayedItems[index];
@@ -310,78 +343,151 @@ class MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isOutOfStock = int.parse(item['stok']!) == 0;
+
     return GestureDetector(
       onTap: isOutOfStock
           ? null
-          : () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => MenuDetail(
-                    name: item['name']!,
-                    price: item['price']!,
-                    imageUrl: "$baseUrl/storage/${item['image']}",
-                    menuId: int.parse(item['id']!),
+          : () async {
+              final prefs = await SharedPreferences.getInstance();
+              final name = prefs.getString('nama_pelanggan');
+              final phone = prefs.getString('telepon_pelanggan');
+
+              if (name == null || phone == null) {
+                String tempName = '';
+                String tempPhone = '';
+
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text("Data Pelanggan"),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        TextField(
+                          decoration: const InputDecoration(labelText: 'Nama'),
+                          onChanged: (value) => tempName = value,
+                        ),
+                        TextField(
+                          decoration:
+                              const InputDecoration(labelText: 'Telepon'),
+                          keyboardType: TextInputType.phone,
+                          onChanged: (value) => tempPhone = value,
+                        ),
+                      ],
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Batal'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () async {
+                          if (tempName.isNotEmpty && tempPhone.isNotEmpty) {
+                            await prefs.setString('nama_pelanggan', tempName);
+                            await prefs.setString(
+                                'telepon_pelanggan', tempPhone);
+                            Navigator.pop(context);
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => MenuDetail(
+                                  name: item['name']!,
+                                  price: item['price']!,
+                                  imageUrl: "$baseUrl/storage/${item['image']}",
+                                  menuId: int.parse(item['id']!),
+                                ),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text('Lanjutkan'),
+                      ),
+                    ],
                   ),
-                ),
-              );
+                );
+              } else {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => MenuDetail(
+                      name: item['name']!,
+                      price: item['price']!,
+                      imageUrl: "$baseUrl/storage/${item['image']}",
+                      menuId: int.parse(item['id']!),
+                    ),
+                  ),
+                );
+              }
             },
       child: Opacity(
         opacity: isOutOfStock ? 0.5 : 1.0,
-        child: Card(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          elevation: 3,
-          child: Stack(
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 6,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ClipRRect(
-                    borderRadius:
-                        const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.network(
-                      "$baseUrl/storage/${item['image']}",
-                      height: 110,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        height: 110,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.fastfood, size: 40),
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: Image.network(
+                  "$baseUrl/storage/${item['image']}",
+                  height: 120,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 120,
+                    color: Colors.grey[300],
+                    child: const Icon(Icons.fastfood, size: 40),
+                  ),
+                ),
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item['name']!,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Rp ${item['price']}',
+                      style: const TextStyle(
+                        color: Color(0xFF2D5EA2),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(item['name']!),
-                          const SizedBox(height: 5),
-                          Text('Rp ${item['price']}'),
-                          const SizedBox(height: 4),
-                          Text('Stok: ${item['stok']}'),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               if (isOutOfStock)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    color: Colors.red,
-                    child: const Text(
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8.0),
+                  child: Center(
+                    child: Text(
                       'Habis',
                       style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12),
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ),
