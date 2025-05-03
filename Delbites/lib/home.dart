@@ -10,8 +10,8 @@ import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseUrl = 'http://10.0.2.2:8000';
-// const String baseUrl = 'http://127.0.0.1:8000';
+// const String baseUrl = 'http://10.0.2.2:8000';
+const String baseUrl = 'http://127.0.0.1:8000';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -249,16 +249,19 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildCategorySelector() {
+    final categories = ["Rekomendasi", "makanan", "minuman"];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
         child: Row(
-          children: const [
-            CategoryButton(label: "Rekomendasi"),
-            CategoryButton(label: "makanan"),
-            CategoryButton(label: "minuman"),
-          ],
+          children: categories
+              .map((cat) => CategoryButton(
+                    label: cat,
+                    isSelected: selectedCategory == cat,
+                    onTap: () => filterCategory(cat),
+                  ))
+              .toList(),
         ),
       ),
     );
@@ -316,22 +319,34 @@ class _HomePageState extends State<HomePage> {
 
 class CategoryButton extends StatelessWidget {
   final String label;
-  const CategoryButton({Key? key, required this.label}) : super(key: key);
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const CategoryButton({
+    Key? key,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final _HomePageState? homeState =
-        context.findAncestorStateOfType<_HomePageState>();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: ElevatedButton(
-        onPressed: () => homeState?.filterCategory(label),
+        onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D5EA2),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          backgroundColor: isSelected
+              ? const Color(0xFF2D5EA2)
+              : const Color.fromARGB(255, 161, 161, 161),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         ),
-        child: Text(label, style: const TextStyle(color: Colors.white)),
+        child: Text(
+          label,
+          style: const TextStyle(color: Colors.white),
+        ),
       ),
     );
   }
