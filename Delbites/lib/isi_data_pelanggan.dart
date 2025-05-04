@@ -1,5 +1,5 @@
+import 'package:Delbites/services/pelanggan_services.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class IsiDataPelanggan extends StatefulWidget {
   @override
@@ -7,51 +7,57 @@ class IsiDataPelanggan extends StatefulWidget {
 }
 
 class _IsiDataPelangganState extends State<IsiDataPelanggan> {
-  final TextEditingController _namaController = TextEditingController();
-  final TextEditingController _nomorController = TextEditingController();
+  final _namaController = TextEditingController();
+  final _teleponController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  Future<void> _simpanData() async {
-    final nama = _namaController.text.trim();
-    final nomor = _nomorController.text.trim();
+  Future<void> _saveData() async {
+    final nama = _namaController.text;
+    final telepon = _teleponController.text;
+    final password = _passwordController.text;
 
-    if (nama.isEmpty || nomor.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Nama dan nomor telepon wajib diisi.')),
+    try {
+      final result = await PelangganService().createPelanggan(
+        nama: nama,
+        telepon: telepon,
+        password: password,
       );
-      return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Pelanggan berhasil dibuat: ${result['nama']}')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal membuat pelanggan: $e')),
+      );
     }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('nama', nama);
-    await prefs.setString('nomor', nomor);
-
-    Navigator.pop(context); // Kembali ke halaman sebelumnya
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Isi Data Pelanggan'),
-      ),
+      appBar: AppBar(title: Text("Isi Data Pelanggan")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: _namaController,
-              decoration: InputDecoration(labelText: 'Nama'),
+              decoration: InputDecoration(labelText: 'Nama Lengkap'),
             ),
-            SizedBox(height: 16),
             TextField(
-              controller: _nomorController,
-              keyboardType: TextInputType.phone,
+              controller: _teleponController,
               decoration: InputDecoration(labelText: 'Nomor Telepon'),
+              keyboardType: TextInputType.phone,
             ),
-            SizedBox(height: 32),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(labelText: 'Password'),
+              obscureText: true,
+            ),
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: _simpanData,
-              child: Text('Simpan'),
+              onPressed: _saveData,
+              child: Text('Simpan Data'),
             ),
           ],
         ),

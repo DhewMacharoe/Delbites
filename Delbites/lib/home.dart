@@ -1,17 +1,16 @@
-// semua import tetap
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/menu_detail.dart';
 import 'package:Delbites/riwayat_pesanan.dart';
+import 'package:Delbites/widgets/bottom_nav.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import "package:flutter_rating_bar/flutter_rating_bar.dart";
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import "package:flutter_rating_bar/flutter_rating_bar.dart";
 
-// const String baseUrl = 'http://10.0.2.2:8000';
 const String baseUrl = 'http://127.0.0.1:8000';
 
 class HomePage extends StatefulWidget {
@@ -22,6 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  int _currentIndex = 0;
   List<Map<String, String>> allItems = [];
   List<Map<String, String>> displayedItems = [];
   bool isLoading = true;
@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchMenu() async {
+    setState(() => isLoading = true);
     try {
       final response = await http.get(Uri.parse('$baseUrl/api/menu'));
       if (response.statusCode == 200) {
@@ -48,7 +49,7 @@ class _HomePageState extends State<HomePage> {
                   'stok_terjual': (item['stok_terjual'] ?? '0').toString(),
                   'kategori': item['kategori'].toString(),
                   'image': item['gambar'].toString(),
-                  'rating': (item['rating'] ?? '0.0').toString(), 
+                  'rating': (item['rating'] ?? '0.0').toString(),
                 })
             .toList();
 
@@ -71,8 +72,8 @@ class _HomePageState extends State<HomePage> {
   }
 
   void filterCategory(String category) {
-    selectedCategory = category;
     setState(() {
+      selectedCategory = category;
       if (category == 'Rekomendasi') {
         displayedItems = allItems
             .where((item) => int.parse(item['stok']!) > 0)
@@ -149,7 +150,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavigation(),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
@@ -194,11 +195,10 @@ class _HomePageState extends State<HomePage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            Navigator.pop(context); // tutup dialog
+                            Navigator.pop(context);
                             Future.delayed(const Duration(milliseconds: 100),
                                 () {
-                              // beri delay agar dialog benar-benar tertutup dulu
-                              Future.microtask(() => SystemNavigator.pop());
+                              exit(0);
                             });
                           },
                           child: const Text("Logout"),
@@ -428,12 +428,15 @@ class MenuCard extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => MenuDetail(
+                                    builder: (context) => MenuDetail(
                                       name: item['name']!,
                                       price: item['price']!,
                                       imageUrl:
-                                          "$baseUrl/storage/${item['image']}",
-                                      menuId: int.parse(item['id']!), rating: '',
+                                          "$baseUrl/storage/${item['image']!}",
+                                      menuId: int.parse(item['id']!),
+                                      rating: item['rating']!,
+                                      kategori: item['kategori']!,
+                                      deskripsi: item['deskripsi'] ?? '',
                                     ),
                                   ),
                                 );
@@ -465,11 +468,14 @@ class MenuCard extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => MenuDetail(
+                    builder: (context) => MenuDetail(
                       name: item['name']!,
                       price: item['price']!,
-                      imageUrl: "$baseUrl/storage/${item['image']}",
-                      menuId: int.parse(item['id']!), rating: '0.0',
+                      imageUrl: "$baseUrl/storage/${item['image']!}",
+                      menuId: int.parse(item['id']!),
+                      rating: item['rating']!,
+                      kategori: item['kategori']!,
+                      deskripsi: item['deskripsi'] ?? '',
                     ),
                   ),
                 );

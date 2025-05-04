@@ -40,10 +40,15 @@ class MenuController extends Controller
             'admin_id' => 'sometimes|exists:admins,admin_id',
             'nama_menu' => 'sometimes|string|max:50',
             'kategori' => 'sometimes|in:makanan,minuman',
+            'suhu' => 'nullable|in:panas,dingin',
             'harga' => 'sometimes|numeric|min:0',
             'stok' => 'sometimes|integer|min:0',
             'gambar' => 'nullable|string|max:100',
         ]);
+
+        if ($request->kategori === 'makanan') {
+            $request->merge(['suhu' => null]);
+        }
 
         $menu->update($request->all());
         return response()->json($menu);

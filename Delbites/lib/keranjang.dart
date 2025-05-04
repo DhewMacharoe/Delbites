@@ -1,10 +1,13 @@
 import 'package:Delbites/checkout.dart';
-import 'package:Delbites/home.dart';
-import 'package:Delbites/riwayat_pesanan.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<Map<String, dynamic>> pesanan = [];
+
+Future<int?> getPelangganId() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('pelanggan_id');
+}
 
 class KeranjangPage extends StatefulWidget {
   const KeranjangPage({Key? key}) : super(key: key);
@@ -14,9 +17,11 @@ class KeranjangPage extends StatefulWidget {
 }
 
 class _KeranjangPageState extends State<KeranjangPage> {
+  List<Map<String, dynamic>> filteredPesanan = [];
+
   int getTotalHarga() {
     int total = 0;
-    for (var item in pesanan) {
+    for (var item in filteredPesanan) {
       total +=
           (int.parse(item['price'].replaceAll('Rp ', '').replaceAll('.', '')) *
                   item['quantity'])
@@ -37,81 +42,109 @@ class _KeranjangPageState extends State<KeranjangPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
+            // Instead of setState, directly navigate back
             Navigator.pop(context);
           },
         ),
       ),
-      body: pesanan.isEmpty
-          ? const Center(
+      body: FutureBuilder<int?>(
+        future: getPelangganId(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data == null) {
+            return const Center(
               child: Text(
-                'Keranjang masih kosong',
+                'Gagal mendapatkan ID pelanggan.',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16.0),
-              itemCount: pesanan.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            );
+          }
+
+          final int pelangganId = snapshot.data!;
+          filteredPesanan = pesanan
+              .where((item) => item['id_pelanggan'] == pelangganId)
+              .toList();
+
+          return filteredPesanan.isEmpty
+              ? const Center(
+                  child: Text(
+                    'Keranjang masih kosong',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Row(
-                      children: [
-                        Icon(Icons.fastfood, size: 50, color: Colors.grey[700]),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                )
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16.0),
+                  itemCount: filteredPesanan.length,
+                  itemBuilder: (context, index) {
+                    return Card(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Row(
                           children: [
-                            Text(
-                              pesanan[index]['name'],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
+                            Icon(Icons.fastfood,
+                                size: 50, color: Colors.grey[700]),
+                            const SizedBox(width: 10),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  filteredPesanan[index]['name'],
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  filteredPesanan[index]['price'],
+                                  style: const TextStyle(color: Colors.grey),
+                                ),
+                              ],
                             ),
-                            Text(pesanan[index]['price'],
-                                style: const TextStyle(color: Colors.grey)),
+                            const Spacer(),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle,
+                                      color: Colors.black),
+                                  onPressed: () {
+                                    setState(() {
+                                      if (filteredPesanan[index]['quantity'] >
+                                          1) {
+                                        filteredPesanan[index]['quantity']--;
+                                      } else {
+                                        pesanan.removeAt(index);
+                                      }
+                                    });
+                                  },
+                                ),
+                                Text(
+                                  filteredPesanan[index]['quantity'].toString(),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add_circle,
+                                      color: Colors.black),
+                                  onPressed: () {
+                                    setState(() {
+                                      filteredPesanan[index]['quantity']++;
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                        const Spacer(),
-                        Row(
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove_circle,
-                                  color: Colors.black),
-                              onPressed: () {
-                                setState(() {
-                                  if (pesanan[index]['quantity'] > 1) {
-                                    pesanan[index]['quantity']--;
-                                  } else {
-                                    pesanan.removeAt(index);
-                                  }
-                                });
-                              },
-                            ),
-                            Text(
-                              pesanan[index]['quantity'].toString(),
-                              style: const TextStyle(fontSize: 16),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.add_circle,
-                                  color: Colors.black),
-                              onPressed: () {
-                                setState(() {
-                                  pesanan[index]['quantity']++;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                      ),
+                    );
+                  },
                 );
-              },
-            ),
-      bottomNavigationBar: pesanan.isEmpty
+        },
+      ),
+      bottomSheet: filteredPesanan.isEmpty
           ? null
           : Padding(
               padding: const EdgeInsets.all(16.0),
@@ -142,7 +175,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                CheckoutPage(pesanan: pesanan),
+                                CheckoutPage(pesanan: filteredPesanan),
                           ),
                         );
                       },
@@ -162,67 +195,6 @@ class _KeranjangPageState extends State<KeranjangPage> {
                 ],
               ),
             ),
-    );
-  }
-
-  Widget buildBottomNavigation(BuildContext context) {
-    return CurvedNavigationBar(
-      backgroundColor: Colors.white,
-      color: const Color(0xFF2D5EA2),
-      buttonBackgroundColor: const Color(0xFF2D5EA2),
-      height: 60,
-      animationDuration: const Duration(milliseconds: 300),
-      items: const <Widget>[
-        Icon(Icons.home, size: 30, color: Colors.white),
-        Icon(Icons.access_time, size: 30, color: Colors.white),
-        Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-      ],
-      onTap: (index) {
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
-          );
-        } else if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => KeranjangPage()),
-          );
-        }
-      },
-    );
-  }
-}
-
-class CategoryButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const CategoryButton({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: ElevatedButton(
-        onPressed: onTap,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D5EA2),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        ),
-        child: Text(
-          label,
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-      ),
     );
   }
 }

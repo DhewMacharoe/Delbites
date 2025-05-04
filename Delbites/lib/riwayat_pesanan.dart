@@ -1,11 +1,14 @@
 import 'dart:convert';
 
-import 'package:Delbites/home.dart';
-import 'package:Delbites/keranjang.dart';
-import 'package:Delbites/waiting_page.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
+import 'package:Delbites/widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+Future<int?> getPelangganId() async {
+  final prefs = await SharedPreferences.getInstance();
+  return prefs.getInt('pelanggan_id');
+}
 
 class RiwayatPesananPage extends StatefulWidget {
   final List<Map<String, String>>? newOrders;
@@ -34,14 +37,16 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
   }
 
   Future<void> fetchOrders() async {
-    final String apiUrl = 'http://127.0.0.1:8000/api/pemesanan';
+    final int? pelangganId = await getPelangganId();
+    if (pelangganId == null) return;
+
+    final String apiUrl =
+        'http://127.0.0.1:8000/api/pemesanan?pelanggan_id=$pelangganId';
 
     try {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
-        print(response.body);
-
         List<dynamic> data = json.decode(response.body);
 
         setState(() {
@@ -57,10 +62,10 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
           }).toList();
         });
       } else {
-        throw Exception('Failed to load orders');
+        throw Exception('Gagal memuat pesanan');
       }
     } catch (e) {
-      throw Exception('Failed to load orders: $e');
+      throw Exception('Terjadi kesalahan: $e');
     }
   }
 
@@ -74,7 +79,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
           Expanded(child: _buildOrderList()),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: const BottomNavBar(currentIndex: 1),
     );
   }
 
@@ -82,10 +87,7 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
     return AppBar(
       backgroundColor: const Color(0xFF4C53A5),
       elevation: 0,
-      leading: IconButton(
-        icon: const Icon(Icons.arrow_back, color: Colors.white),
-        onPressed: () => Navigator.pop(context),
-      ),
+      automaticallyImplyLeading: false, // <-- Menghapus panah back
       title: const Text(
         'Riwayat Pemesanan',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -162,53 +164,14 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
                       Text("Tanggal: ${order["date"].toString()}"),
                     ],
                   ),
-                  trailing: Text("Rp${order["price"] ?? "0"}"),
-                  onTap: () {
-                    if (selectedStatus == "menunggu") {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => WaitingPage(orders: [order]),
-                        ),
-                      );
-                    }
-                  },
+                  trailing: Text(
+                    "Rp ${order["price"].toString()}",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
                 ),
               );
             },
           );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return CurvedNavigationBar(
-      backgroundColor: Colors.white,
-      color: const Color(0xFF2D5EA2),
-      buttonBackgroundColor: const Color(0xFF2D5EA2),
-      height: 60,
-      animationDuration: const Duration(milliseconds: 300),
-      items: const <Widget>[
-        Icon(Icons.home, size: 30, color: Colors.white),
-        Icon(Icons.history, size: 30, color: Colors.white),
-        Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-      ],
-      onTap: (index) {
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
-          );
-        } else if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const KeranjangPage()),
-          );
-        }
-      },
-    );
   }
 }

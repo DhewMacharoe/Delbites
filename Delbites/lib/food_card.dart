@@ -6,14 +6,18 @@ class FoodCard extends StatelessWidget {
   final String price;
   final String imageUrl;
   final String stok;
-  final int menuId; // Menambahkan parameter menuId
+  final String kategori;
+  final int menuId;
+  final String deskripsi;
 
   const FoodCard({
     required this.name,
     required this.price,
     required this.imageUrl,
     required this.stok,
-    required this.menuId, // Menambahkan menuId di sini
+    required this.menuId,
+    required this.kategori,
+    required this.deskripsi,
     Key? key,
   }) : super(key: key);
 
@@ -28,7 +32,9 @@ class FoodCard extends StatelessWidget {
               name: name,
               price: price,
               imageUrl: imageUrl,
-              menuId: menuId, rating: '0.0', // Menyertakan menuId ke MenuDetail
+              menuId: menuId, rating: '0.0',
+              kategori: kategori,
+              deskripsi: deskripsi,
             ),
           ),
         );

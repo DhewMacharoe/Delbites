@@ -1,9 +1,9 @@
 import 'dart:convert';
 
-import 'package:Delbites/keranjang.dart';
+import 'package:Delbites/suhu_selector.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import "package:flutter_rating_bar/flutter_rating_bar.dart";
+import 'package:http/http.dart' as http;
 
 const String baseUrl = 'http://127.0.0.1:8000';
 
@@ -13,6 +13,8 @@ class MenuDetail extends StatefulWidget {
   final String imageUrl;
   final int menuId;
   final String rating;
+  final String kategori;
+  final String deskripsi;
 
   const MenuDetail({
     required this.name,
@@ -20,6 +22,8 @@ class MenuDetail extends StatefulWidget {
     required this.imageUrl,
     required this.menuId,
     required this.rating,
+    required this.kategori,
+    required this.deskripsi,
     Key? key,
   }) : super(key: key);
 
@@ -28,6 +32,9 @@ class MenuDetail extends StatefulWidget {
 }
 
 class _MenuDetailState extends State<MenuDetail> {
+  String? selectedSuhu;
+  String? catatanTambahan;
+  List<Map<String, dynamic>> pesanan = [];
   double _userRating = 0;
 
   Future<void> addToCart() async {
@@ -38,9 +45,11 @@ class _MenuDetailState extends State<MenuDetail> {
         body: jsonEncode({
           'id_menu': widget.menuId,
           'nama_menu': widget.name,
-          'kategori': 'makanan',
+          'kategori': widget.kategori,
+          'suhu': selectedSuhu,
           'jumlah': 1,
-          'harga': widget.price,
+          'harga': int.tryParse(widget.price) ?? 0,
+          'catatan': catatanTambahan ?? '',
         }),
       );
 
@@ -51,6 +60,7 @@ class _MenuDetailState extends State<MenuDetail> {
             backgroundColor: Colors.green,
           ),
         );
+        Navigator.pop(context);
       } else {
         _addToLocalCart();
       }
@@ -61,15 +71,19 @@ class _MenuDetailState extends State<MenuDetail> {
 
   void _addToLocalCart() {
     try {
-      int index = pesanan.indexWhere((item) => item['id'] == widget.menuId);
+      int index = pesanan.indexWhere((item) =>
+          item['id'] == widget.menuId &&
+          (widget.kategori == 'makanan' || item['suhu'] == selectedSuhu));
       if (index != -1) {
         pesanan[index]['quantity'] += 1;
       } else {
         pesanan.add({
           'id': widget.menuId,
           'name': widget.name,
-          'price': widget.price,
+          'price': int.tryParse(widget.price) ?? 0,
           'quantity': 1,
+          if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
+          'catatan': catatanTambahan ?? '',
         });
       }
 
@@ -79,7 +93,6 @@ class _MenuDetailState extends State<MenuDetail> {
           backgroundColor: Colors.blue,
         ),
       );
-
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +135,42 @@ class _MenuDetailState extends State<MenuDetail> {
     }
   }
 
+  void _showCatatanDialog(BuildContext context) {
+    final _catatanController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Catatan Tambahan'),
+          content: TextField(
+            controller: _catatanController,
+            decoration: const InputDecoration(
+              hintText: 'Contoh: Kurangi gula, tanpa es...',
+            ),
+            maxLines: 3,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  catatanTambahan = _catatanController.text;
+                });
+                Navigator.pop(context);
+                addToCart();
+              },
+              child: const Text('Tambah'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final double initialRating = double.tryParse(widget.rating) ?? 0.0;
@@ -140,10 +189,21 @@ class _MenuDetailState extends State<MenuDetail> {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.network(
-                  widget.imageUrl,
+                  widget.imageUrl.isNotEmpty
+                      ? widget.imageUrl
+                      : 'https://via.placeholder.com/200', // Fallback to placeholder if imageUrl is null or empty
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) {
+                      return child;
+                    } else {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                  },
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       height: 200,
@@ -163,9 +223,22 @@ class _MenuDetailState extends State<MenuDetail> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Rp ${widget.price}',
+              'Rp${widget.price}',
               style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
+            const SizedBox(height: 10),
+            Text(
+              widget.deskripsi,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            if (widget.kategori == 'minuman')
+              SuhuSelector(
+                selectedSuhu: selectedSuhu,
+                onSelected: (suhu) => setState(() {
+                  selectedSuhu = suhu;
+                }),
+              ),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -184,7 +257,7 @@ class _MenuDetailState extends State<MenuDetail> {
             ),
             const SizedBox(height: 10),
             RatingBar.builder(
-              initialRating: 0,
+              initialRating: initialRating,
               minRating: 1,
               direction: Axis.horizontal,
               allowHalfRating: true,
@@ -209,9 +282,7 @@ class _MenuDetailState extends State<MenuDetail> {
             ),
             const Spacer(),
             ElevatedButton(
-              onPressed: () {
-                addToCart();
-              },
+              onPressed: () => _showCatatanDialog(context),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4C53A5),
                 padding: const EdgeInsets.symmetric(vertical: 15),

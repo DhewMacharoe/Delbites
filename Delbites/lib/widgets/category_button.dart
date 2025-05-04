@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 
 class CategoryButton extends StatelessWidget {
   final String label;
+  final bool isSelected;
   final VoidCallback onTap;
 
-  const CategoryButton({required this.label, required this.onTap, Key});
+  const CategoryButton({
+    Key? key,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -13,16 +19,16 @@ class CategoryButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onTap,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2D5EA2),
+          backgroundColor: isSelected
+              ? const Color(0xFF2D5EA2)
+              : const Color.fromARGB(255, 161, 161, 161),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         ),
         child: Text(
           label,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
     );
