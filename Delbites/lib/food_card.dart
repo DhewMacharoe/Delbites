@@ -28,7 +28,7 @@ class FoodCard extends StatelessWidget {
               name: name,
               price: price,
               imageUrl: imageUrl,
-              menuId: menuId, // Menyertakan menuId ke MenuDetail
+              menuId: menuId, rating: '0.0', // Menyertakan menuId ke MenuDetail
             ),
           ),
         );

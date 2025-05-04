@@ -3,70 +3,72 @@ import 'dart:convert';
 import 'package:Delbites/keranjang.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import "package:flutter_rating_bar/flutter_rating_bar.dart";
 
 const String baseUrl = 'http://127.0.0.1:8000';
 
-class MenuDetail extends StatelessWidget {
+class MenuDetail extends StatefulWidget {
   final String name;
   final String price;
   final String imageUrl;
   final int menuId;
+  final String rating;
 
   const MenuDetail({
     required this.name,
     required this.price,
     required this.imageUrl,
     required this.menuId,
+    required this.rating,
     Key? key,
   }) : super(key: key);
 
-  Future<void> addToCart(BuildContext context) async {
+  @override
+  State<MenuDetail> createState() => _MenuDetailState();
+}
+
+class _MenuDetailState extends State<MenuDetail> {
+  double _userRating = 0;
+
+  Future<void> addToCart() async {
     try {
-      // Create a simplified cart item without id_pelanggan
       final response = await http.post(
         Uri.parse('$baseUrl/api/keranjang'),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          // Remove id_pelanggan for testing
-          'id_menu': menuId,
-          'nama_menu': name,
-          'kategori': 'makanan', // Default category
+          'id_menu': widget.menuId,
+          'nama_menu': widget.name,
+          'kategori': 'makanan',
           'jumlah': 1,
-          'harga': price,
+          'harga': widget.price,
         }),
       );
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Item successfully added to the cart'),
+            content: Text('Item berhasil ditambahkan ke keranjang'),
             backgroundColor: Colors.green,
           ),
         );
       } else {
-        // For testing purposes, add to local cart instead of showing error
-        _addToLocalCart(context);
+        _addToLocalCart();
       }
     } catch (e) {
-      // For testing purposes, add to local cart instead of showing error
-      _addToLocalCart(context);
+      _addToLocalCart();
     }
   }
 
-  // Add to local cart for testing when API fails
-  void _addToLocalCart(BuildContext context) {
+  void _addToLocalCart() {
     try {
-      int index = pesanan.indexWhere((item) => item['id'] == menuId);
-
+      int index = pesanan.indexWhere((item) => item['id'] == widget.menuId);
       if (index != -1) {
         pesanan[index]['quantity'] += 1;
       } else {
         pesanan.add({
-          'id': menuId,
-          'name': name,
-          'price': price,
+          'id': widget.menuId,
+          'name': widget.name,
+          'price': widget.price,
           'quantity': 1,
         });
       }
@@ -89,11 +91,44 @@ class MenuDetail extends StatelessWidget {
     }
   }
 
+  Future<void> submitRating(double rating) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/rating'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id_menu': widget.menuId,
+          'rating': rating,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Rating berhasil dikirim'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception('Gagal mengirim rating');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim rating: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final double initialRating = double.tryParse(widget.rating) ?? 0.0;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(name),
+        title: Text(widget.name),
         backgroundColor: const Color(0xFF2D5EA2),
       ),
       body: Padding(
@@ -105,7 +140,7 @@ class MenuDetail extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(15),
                 child: Image.network(
-                  imageUrl,
+                  widget.imageUrl,
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -123,18 +158,59 @@ class MenuDetail extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              name,
+              widget.name,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             Text(
-              price,
+              'Rp ${widget.price}',
               style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 20),
+                const SizedBox(width: 5),
+                Text(
+                  '${initialRating.toStringAsFixed(1)} / 5.0',
+                  style: const TextStyle(fontSize: 16),
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
+            const Text(
+              'Beri Rating Anda:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            RatingBar.builder(
+              initialRating: 0,
+              minRating: 1,
+              direction: Axis.horizontal,
+              allowHalfRating: true,
+              itemCount: 5,
+              itemPadding: const EdgeInsets.symmetric(horizontal: 4.0),
+              itemBuilder: (context, _) => const Icon(
+                Icons.star,
+                color: Colors.amber,
+              ),
+              onRatingUpdate: (rating) {
+                setState(() {
+                  _userRating = rating;
+                });
+              },
+            ),
+            const SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                addToCart(context);
+                submitRating(_userRating);
+              },
+              child: const Text("Kirim Rating"),
+            ),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                addToCart();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4C53A5),

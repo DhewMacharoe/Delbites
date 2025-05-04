@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  flutter_rating_bar: ^4.0.0 # Corrected dependency name
   uuid: ^3.0.7  # You can use the latest version available
   webview_flutter: ^4.2.2
   cupertino_icons: ^1.0.8

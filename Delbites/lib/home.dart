@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import "package:flutter_rating_bar/flutter_rating_bar.dart";
 
 // const String baseUrl = 'http://10.0.2.2:8000';
 const String baseUrl = 'http://127.0.0.1:8000';
@@ -47,6 +48,7 @@ class _HomePageState extends State<HomePage> {
                   'stok_terjual': (item['stok_terjual'] ?? '0').toString(),
                   'kategori': item['kategori'].toString(),
                   'image': item['gambar'].toString(),
+                  'rating': (item['rating'] ?? '0.0').toString(), 
                 })
             .toList();
 
@@ -135,10 +137,7 @@ class _HomePageState extends State<HomePage> {
             _buildHeader(),
             _buildSearchBar(),
             _buildCategorySelector(),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            ),
+            const SizedBox(height: 8),
             Expanded(
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -434,7 +433,7 @@ class MenuCard extends StatelessWidget {
                                       price: item['price']!,
                                       imageUrl:
                                           "$baseUrl/storage/${item['image']}",
-                                      menuId: int.parse(item['id']!),
+                                      menuId: int.parse(item['id']!), rating: '',
                                     ),
                                   ),
                                 );
@@ -470,7 +469,7 @@ class MenuCard extends StatelessWidget {
                       name: item['name']!,
                       price: item['price']!,
                       imageUrl: "$baseUrl/storage/${item['image']}",
-                      menuId: int.parse(item['id']!),
+                      menuId: int.parse(item['id']!), rating: '0.0',
                     ),
                   ),
                 );
@@ -529,6 +528,19 @@ class MenuCard extends StatelessWidget {
                         color: Color(0xFF2D5EA2),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Tampilkan rating dengan RatingBarIndicator
+                    RatingBarIndicator(
+                      rating: double.tryParse(item['rating'] ?? '0.0') ?? 0.0,
+                      itemCount: 5,
+                      itemSize: 20.0,
+                      direction: Axis.horizontal,
+                      unratedColor: Colors.grey.shade300,
+                      itemBuilder: (context, index) => const Icon(
+                        Icons.star,
+                        color: Colors.amber,
                       ),
                     ),
                   ],
