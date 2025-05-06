@@ -6,6 +6,9 @@ import 'package:Delbites/utils/payment_utils.dart';
 import 'package:Delbites/waiting_page.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+const String baseUrl = 'http://127.0.0.1:8000'; // Tambahkan definisi baseUrl
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> pesanan;
@@ -21,25 +24,144 @@ class _CheckoutPageState extends State<CheckoutPage> {
   bool isLoading = false;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
 
   int getTotalHarga() {
     int total = 0;
     for (var item in widget.pesanan) {
-      total +=
-          (int.parse(item['price'].replaceAll('Rp ', '').replaceAll('.', '')) *
-                  item['quantity'])
-              .toInt();
+      // Perbaikan untuk menangani price sebagai integer
+      int price = 0;
+      int quantity = 0;
+
+      // Handle berbagai kemungkinan tipe data untuk price
+      if (item['price'] is int) {
+        price = item['price'];
+      } else if (item['price'] is String) {
+        // Coba parse string ke int
+        price = int.tryParse(item['price']
+                .toString()
+                .replaceAll('Rp ', '')
+                .replaceAll('.', '')) ??
+            0;
+      }
+
+      // Handle berbagai kemungkinan tipe data untuk quantity
+      if (item['quantity'] is int) {
+        quantity = item['quantity'];
+      } else {
+        quantity = int.tryParse(item['quantity'].toString()) ?? 0;
+      }
+
+      total += price * quantity;
     }
     return total;
   }
 
-  Future<void> processPayment() async {
-    if (selectedPayment == null) return;
+  // Format harga untuk ditampilkan
+  String formatPrice(dynamic price) {
+    if (price is int) {
+      return 'Rp ${price.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
+    } else if (price is String) {
+      if (price.startsWith('Rp ')) {
+        return price;
+      } else {
+        return 'Rp $price';
+      }
+    }
+    return 'Rp 0';
+  }
 
-    if (selectedPayment == "Bayar langsung di kasir") {
-      processCashPayment();
-    } else {
-      await processMidtransPayment();
+  Future<void> processPayment() async {
+    final nama = nameController.text.trim();
+    final telepon = phoneController.text.trim();
+    final email = emailController.text.trim();
+
+    if (nama.isEmpty || telepon.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data pelanggan.')),
+      );
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      // 1. Panggil API pelanggan
+      final pelangganResponse = await http.post(
+        Uri.parse('http://127.0.0.1:8000/api/pelanggan'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'nama': nama, 'telepon': telepon}),
+      );
+
+// Debug output
+      print('Status: ${pelangganResponse.statusCode}');
+      print('Body: ${pelangganResponse.body}');
+
+      if (pelangganResponse.statusCode != 200 &&
+          pelangganResponse.statusCode != 201) {
+        throw Exception('Gagal ambil pelanggan');
+      }
+
+// Cek jika body kosong
+      if (pelangganResponse.body.trim().isEmpty) {
+        throw Exception('Respons dari server kosong.');
+      }
+
+      Map<String, dynamic> pelangganData;
+      try {
+        pelangganData = jsonDecode(pelangganResponse.body.trim());
+      } catch (e) {
+        throw Exception('Gagal decode pelangganResponse.body: $e');
+      }
+
+      final idPelanggan = pelangganData['id'];
+
+      // 2. Persiapkan data pesanan
+      final orderId = 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
+      final grossAmount = getTotalHarga();
+
+      final items = widget.pesanan
+          .map((item) => {
+                'id': item['id'].toString(),
+                'name': item['name'],
+                'price': item['price'],
+                'quantity': item['quantity'],
+              })
+          .toList();
+
+      // 3. Kirim ke API Midtrans
+      final midtransResponse = await http.post(
+        Uri.parse('$baseUrl/api/midtrans/transaction'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'id_pelanggan': idPelanggan,
+          'order_id': orderId,
+          'gross_amount': grossAmount,
+          'first_name': nama,
+          'last_name': '',
+          'email': email,
+          'items': items,
+        }),
+      );
+
+      final midtransData = jsonDecode(midtransResponse.body);
+
+      if (midtransResponse.statusCode == 200 &&
+          midtransData['status'] == 'success') {
+        final snapToken = midtransData['snap_token'];
+        final redirectUrl = midtransData['redirect_url'];
+        // Lakukan navigasi ke WebView Midtrans di sini jika perlu
+        print("Redirect to: $redirectUrl");
+      } else {
+        throw Exception('Gagal membuat transaksi: ${midtransData['message']}');
+      }
+    } catch (e) {
+      print("Payment error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Payment error: $e')),
+      );
+    } finally {
+      setState(() => isLoading = false);
     }
   }
 
@@ -47,11 +169,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
     List<Map<String, String>> ordersToSend = widget.pesanan.map((item) {
       return {
         "name": item["name"].toString(),
-        "price": item["price"].toString(),
+        "price": formatPrice(item["price"]),
         "quantity": item["quantity"].toString(),
         "date": "Sekarang",
         "status": "Menunggu",
         "payment": selectedPayment!,
+        // Tambahkan informasi suhu dan catatan jika ada
+        if (item["suhu"] != null) "suhu": item["suhu"].toString(),
+        if (item["catatan"] != null && item["catatan"].isNotEmpty)
+          "catatan": item["catatan"].toString(),
       };
     }).toList();
 
@@ -85,6 +211,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     });
 
     try {
+      final String nama = nameController.text.trim();
+
       // 1. Generate Order ID
       final String orderId = PaymentUtils.generateOrderId();
 
@@ -93,11 +221,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
       // 3. Ambil daftar item dari pesanan
       final List<Map<String, dynamic>> itemsList = widget.pesanan.map((item) {
+        int price = 0;
+        if (item['price'] is int) {
+          price = item['price'];
+        } else if (item['price'] is String) {
+          price = int.tryParse(item['price']
+                  .toString()
+                  .replaceAll('Rp ', '')
+                  .replaceAll('.', '')) ??
+              0;
+        }
+
         return {
           'id': item['id'].toString(),
           'name': item['name'],
-          'price': PaymentUtils.parseRupiah(item['price']),
+          'price': price,
           'quantity': item['quantity'],
+          if (item['suhu'] != null) 'suhu': item['suhu'],
+          if (item['catatan'] != null && item['catatan'].isNotEmpty)
+            'catatan': item['catatan'],
         };
       }).toList();
 
@@ -112,12 +254,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
           'Accept': 'application/json',
         },
         body: jsonEncode({
+          'id_pelanggan':
+              nama, // <-- ini harus hasil dari step simpan/cari pelanggan sebelumnya
           'order_id': orderId.toString(),
           'gross_amount': totalHarga,
-          'id_pemesanan': 1,
-          'first_name': (nameParts['firstName'] ?? 'User').toString(),
-          'last_name': (nameParts['lastName'] ?? '').toString(),
-          'email': emailController.text,
+          'first_name': nameParts[0],
+          'last_name':
+              nameParts.length > 1 ? nameParts.sublist(1).join(" ") : '',
+          'email': "no@email.com", // tetap dummy
           'items': itemsList,
         }),
       );
@@ -160,6 +304,24 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    // Ambil nama pelanggan dari SharedPreferences
+    _getCustomerName();
+  }
+
+  void _getCustomerName() async {
+    final prefs = await SharedPreferences.getInstance();
+    final name = prefs.getString('nama_pelanggan');
+
+    // Setel nama pelanggan ke dalam nameController
+    if (name != null) {
+      nameController.text = name; // Isi nama pelanggan di TextField
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -198,10 +360,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         children: [
                           _paymentOption(
                               'Bayar langsung di kasir', Icons.store),
-                          _paymentOption('Credit Card', Icons.credit_card),
-                          _paymentOption(
-                              'Bank Transfer', Icons.account_balance),
-                          _paymentOption('GoPay', Icons.payment),
+                          _paymentOption('Bank Transfer', Icons.credit_card),
                         ],
                       ),
                     ),
@@ -219,11 +378,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             ),
                             const SizedBox(height: 10),
                             TextField(
-                              controller: nameController,
+                              controller: phoneController,
+                              decoration: const InputDecoration(
+                                labelText: 'Nomor Telepon',
+                                border: OutlineInputBorder(),
+                              ),
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 10),
+                            TextField(
+                              controller: nameController, // Nama sudah otomatis
                               decoration: const InputDecoration(
                                 labelText: 'Full Name',
                                 border: OutlineInputBorder(),
                               ),
+                              readOnly: true, // Membaca saja, tidak bisa diedit
                             ),
                             const SizedBox(height: 10),
                             TextField(
@@ -248,12 +417,45 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       child: ListView.builder(
                         itemCount: widget.pesanan.length,
                         itemBuilder: (context, index) {
+                          final item = widget.pesanan[index];
                           return Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.fastfood, size: 40),
-                              title: Text(widget.pesanan[index]['name']),
-                              subtitle: Text(
-                                '${widget.pesanan[index]['price']} x ${widget.pesanan[index]['quantity']}',
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.fastfood, size: 40),
+                                    title: Text(item['name']),
+                                    subtitle: Text(
+                                      '${formatPrice(item['price'])} x ${item['quantity']}',
+                                    ),
+                                  ),
+                                  if (item['suhu'] != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 16.0, bottom: 8.0),
+                                      child: Text(
+                                        'Suhu: ${item['suhu']}',
+                                        style:
+                                            const TextStyle(color: Colors.grey),
+                                      ),
+                                    ),
+                                  if (item['catatan'] != null &&
+                                      item['catatan'].isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(
+                                          left: 16.0, bottom: 8.0),
+                                      child: Text(
+                                        'Catatan: ${item['catatan']}',
+                                        style: const TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           );

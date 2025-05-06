@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/suhu_selector.dart';
 import 'package:flutter/material.dart';
 import "package:flutter_rating_bar/flutter_rating_bar.dart";
@@ -34,9 +35,8 @@ class MenuDetail extends StatefulWidget {
 class _MenuDetailState extends State<MenuDetail> {
   String? selectedSuhu;
   String? catatanTambahan;
-  List<Map<String, dynamic>> pesanan = [];
+  // Hapus list pesanan lokal
   double _userRating = 0;
-
   Future<void> addToCart() async {
     try {
       final response = await http.post(
@@ -71,19 +71,27 @@ class _MenuDetailState extends State<MenuDetail> {
 
   void _addToLocalCart() {
     try {
+      // Gunakan list pesanan global dari keranjang.dart
       int index = pesanan.indexWhere((item) =>
           item['id'] == widget.menuId &&
           (widget.kategori == 'makanan' || item['suhu'] == selectedSuhu));
+
       if (index != -1) {
-        pesanan[index]['quantity'] += 1;
+        // Update state untuk memicu rebuild
+        setState(() {
+          pesanan[index]['quantity'] += 1;
+        });
       } else {
-        pesanan.add({
-          'id': widget.menuId,
-          'name': widget.name,
-          'price': int.tryParse(widget.price) ?? 0,
-          'quantity': 1,
-          if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
-          'catatan': catatanTambahan ?? '',
+        // Update state untuk memicu rebuild
+        setState(() {
+          pesanan.add({
+            'id': widget.menuId,
+            'name': widget.name,
+            'price': int.tryParse(widget.price) ?? 0,
+            'quantity': 1,
+            if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
+            'catatan': catatanTambahan ?? '',
+          });
         });
       }
 

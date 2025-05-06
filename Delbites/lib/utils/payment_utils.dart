@@ -17,11 +17,16 @@ class PaymentUtils {
   }
 
   // Split full name into first and last name
-  static Map<String, String> splitName(String fullName) {
+// Tambahkan di PaymentUtils
+  static List<String> splitName(String fullName) {
     final parts = fullName.trim().split(' ');
-    return {
-      'firstName': parts[0],
-      'lastName': parts.length > 1 ? parts.sublist(1).join(' ') : '',
-    };
+    if (parts.length == 1) {
+      return [parts[0], '']; // hanya nama depan
+    } else {
+      return [
+        parts.first,
+        parts.sublist(1).join(' ')
+      ]; // nama depan dan belakang
+    }
   }
 }

@@ -14,8 +14,10 @@ class CreateKeranjangTable extends Migration
             $table->unsignedBigInteger('id_menu');
             $table->string('nama_menu');
             $table->enum('kategori', ['makanan', 'minuman'])->nullable();
+            $table->string('suhu')->nullable(); // Added for drink temperature
             $table->integer('jumlah')->default(1);
             $table->decimal('harga', 10, 2);
+            $table->text('catatan')->nullable(); // Added for additional notes
             $table->timestamps();
 
             // Foreign key constraints

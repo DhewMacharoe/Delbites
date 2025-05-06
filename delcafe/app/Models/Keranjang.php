@@ -8,18 +8,18 @@ use Illuminate\Database\Eloquent\Model;
 class Keranjang extends Model
 {
     use HasFactory;
-
-    // Table name
+    
     protected $table = 'keranjang';
-
-    // Fillable columns to allow mass assignment
+    
     protected $fillable = [
         'id_pelanggan',
         'id_menu',
         'nama_menu',
         'kategori',
-        'harga',
         'jumlah',
+        'harga',
+        'suhu',     // Added field
+        'catatan'   // Added fiel
     ];
 
     /**

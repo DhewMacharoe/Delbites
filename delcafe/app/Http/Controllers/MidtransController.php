@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Transaction;
+use App\Models\Pemesanan;
 
 class MidtransController extends Controller
 {
@@ -23,11 +24,13 @@ class MidtransController extends Controller
 
     public function createTransaction(Request $request)
     {
+        
         $request->validate([
+            'id_pelanggan' => 'required|integer|exists:pelanggan,id', // <-- pastikan dikirim dan valid
             'order_id' => 'required|string',
             'gross_amount' => 'required|numeric',
             'first_name' => 'required|string',
-            'last_name' => 'string',
+            'last_name' => 'nullable|string',
             'email' => 'required|email',
             'items' => 'required|array',
             'items.*.id' => 'required|string',
@@ -36,9 +39,29 @@ class MidtransController extends Controller
             'items.*.quantity' => 'required|numeric',
         ]);
 
+        // Buat entri pemesanan terlebih dahulu
+        $pemesanan = Pemesanan::create([
+            'id_pelanggan' => $request->id_pelanggan,
+            'admin_id' => null,
+            'total_harga' => $request->gross_amount,
+            'metode_pembayaran' => 'midtrans',
+            'bukti_pembayaran' => null,
+            'status' => 'pembayaran',
+            'waktu_pemesanan' => now(),
+            'waktu_pengambilan' => null,
+        ]);
+
+        // Buat order ID berbasis id pemesanan
+        $orderId = 'ORDER-' . $pemesanan->id . '-' . time();
+
+        // Simpan order ID ke kolom bukti_pembayaran
+        $pemesanan->bukti_pembayaran = $orderId;
+        $pemesanan->save();
+
+        // Persiapkan parameter untuk Midtrans
         $params = [
             'transaction_details' => [
-                'order_id' => $request->order_id,
+                'order_id' => $orderId,
                 'gross_amount' => $request->gross_amount,
             ],
             'customer_details' => [
@@ -47,13 +70,18 @@ class MidtransController extends Controller
                 'email' => $request->email,
             ],
             'item_details' => $request->items,
+            'expiry' => [
+                'start_time' => now()->format('Y-m-d H:i:s O'),
+                'unit' => 'minute',
+                'duration' => 15
+            ],
+            'enabled_payments' => ['gopay', 'echannel'] // VA Mandiri = echannel
         ];
 
         try {
-            // Get Snap Payment Page URL
             $snapToken = Snap::getSnapToken($params);
             $redirectUrl = Snap::getSnapUrl($params);
-            
+
             return response()->json([
                 'status' => 'success',
                 'snap_token' => $snapToken,
@@ -66,6 +94,7 @@ class MidtransController extends Controller
             ], 500);
         }
     }
+
 
     public function checkStatus($orderId)
     {
@@ -85,10 +114,10 @@ class MidtransController extends Controller
         $notificationBody = json_decode($request->getContent(), true);
         $transactionStatus = $notificationBody['transaction_status'];
         $orderId = $notificationBody['order_id'];
-        
+
         // Handle the transaction status accordingly
         // Update your database based on the transaction status
-        
+
         return response()->json(['status' => 'success']);
     }
 }
