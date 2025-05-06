@@ -4,9 +4,13 @@ import 'package:Delbites/midtrans_payment_page.dart';
 import 'package:Delbites/services/midtrans_service.dart';
 import 'package:Delbites/utils/payment_utils.dart';
 import 'package:Delbites/waiting_page.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 const String baseUrl = 'http://127.0.0.1:8000'; // Tambahkan definisi baseUrl
 
@@ -20,6 +24,7 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  
   String? selectedPayment;
   bool isLoading = false;
   final TextEditingController nameController = TextEditingController();
@@ -130,9 +135,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
           .toList();
 
       // 3. Kirim ke API Midtrans
-      final midtransResponse = await http.post(
-        Uri.parse('$baseUrl/api/midtrans/transaction'),
-        headers: {'Content-Type': 'application/json'},
+      final response = await http.post(
+        Uri.parse('$baseUrl/api/midtrans/create-transaction'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
         body: jsonEncode({
           'id_pelanggan': idPelanggan,
           'order_id': orderId,
@@ -144,16 +152,33 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }),
       );
 
-      final midtransData = jsonDecode(midtransResponse.body);
+      if (response.headers['content-type']
+              ?.contains('application/json') ==
+          true) {
+        final midtransData = jsonDecode(response.body);
 
-      if (midtransResponse.statusCode == 200 &&
-          midtransData['status'] == 'success') {
-        final snapToken = midtransData['snap_token'];
-        final redirectUrl = midtransData['redirect_url'];
-        // Lakukan navigasi ke WebView Midtrans di sini jika perlu
-        print("Redirect to: $redirectUrl");
+        if (response.statusCode == 200) {
+        final result = jsonDecode(response.body);
+        final String redirectUrl = result['redirect_url'] ?? '';
+        final String orderId = result['order_id'] ?? '';
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MidtransPaymentPage(
+              redirectUrl: redirectUrl,
+              orderId: orderId,
+            ),
+          ),
+        );
       } else {
-        throw Exception('Gagal membuat transaksi: ${midtransData['message']}');
+          throw Exception(
+              'Gagal membuat transaksi: ${midtransData['message']}');
+        }
+      } else {
+        print("Respons bukan JSON:\n${response.body}");
+        throw Exception(
+            'Server mengembalikan HTML atau format tidak dikenali.');
       }
     } catch (e) {
       print("Payment error: $e");

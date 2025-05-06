@@ -48,7 +48,8 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-Route::post('/midtrans/transaction', [MidtransController::class, 'createTransaction']);
+Route::get('/midtrans/transaction', [MidtransController::class, 'createTransaction']);
+// Route::get('/midtrans/transaction', [MidtransController::class, 'getTransactionInfo']);
 
 // Route::middleware('auth:sanctum')->group(function () {
 //     Route::post('/pembayaran/create', [PembayaranController::class, 'createTransaction']);

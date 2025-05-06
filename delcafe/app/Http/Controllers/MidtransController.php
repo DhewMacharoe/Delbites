@@ -120,4 +120,13 @@ class MidtransController extends Controller
 
         return response()->json(['status' => 'success']);
     }
+    public function getTransactionInfo()
+{
+    return response()->json([
+        'status' => 'ready',
+        'message' => 'Endpoint ini hanya menerima POST untuk membuat transaksi.',
+        'usage' => 'Silakan gunakan metode POST dan kirim data transaksi dalam format JSON.',
+    ]);
+}
+
 }
