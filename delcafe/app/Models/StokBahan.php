@@ -10,7 +10,7 @@ class StokBahan extends Model
     use HasFactory;
 
     protected $table = 'stok_bahan';
-    
+
     protected $fillable = [
         'id_admin',
         'nama_bahan',
@@ -18,7 +18,11 @@ class StokBahan extends Model
         'satuan',
     ];
 
-    // Relasi ke Admin
+    /**
+     * Relasi ke model Admin
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function admin()
     {
         return $this->belongsTo(Admin::class, 'id_admin');
