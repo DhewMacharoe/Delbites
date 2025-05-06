@@ -4,52 +4,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'DelBites Admin')</title>
-    
+
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
+
     <!-- Custom CSS -->
     <style>
         body {
             font-family: 'Nunito', sans-serif;
             background-color: #f8f9fa;
         }
-        
+
         .sidebar {
             background-color: #343a40;
             min-height: 100vh;
             color: white;
         }
-        
+
         .sidebar .nav-link {
             color: rgba(255, 255, 255, 0.8);
             padding: 0.7rem 1rem;
             margin: 0.2rem 0;
             border-radius: 0.25rem;
         }
-        
+
         .sidebar .nav-link:hover {
             color: white;
             background-color: rgba(255, 255, 255, 0.1);
         }
-        
+
         .sidebar .nav-link.active {
             color: white;
             background-color: #0d6efd;
         }
-        
+
         .sidebar .nav-link i {
             margin-right: 0.5rem;
         }
-        
+
         .content-wrapper {
             min-height: 100vh;
             background-color: #f8f9fa;
         }
-        
+
         @media (max-width: 767.98px) {
             .sidebar {
                 position: fixed;
@@ -63,7 +63,7 @@
             }
         }
     </style>
-    
+
     @yield('styles')
 </head>
 <body>
@@ -79,129 +79,105 @@
 
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}"
-                                href="{{ route('dashboard') }}">
-                                <i class="fas fa-tachometer-alt"></i>
-                                Dashboard
+                            <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                                <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('pesanan*') ? 'active' : '' }}"
-                                href="{{ route('pesanan.index') }}">
-                                <i class="fas fa-shopping-cart"></i>
-                                Pesanan
+                            <a class="nav-link {{ request()->is('pesanan*') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">
+                                <i class="fas fa-shopping-cart"></i> Pesanan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}"
-                                href="{{ route('produk.index') }}">
-                                <i class="fas fa-box"></i>
-                                Menu
+                            <a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}" href="{{ route('produk.index') }}">
+                                <i class="fas fa-box"></i> Menu
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('pelanggan*') ? 'active' : '' }}"
-                                href="{{ route('pelanggan.index') }}">
-                                <i class="fas fa-users"></i>
-                                Pelanggan
+                            <a class="nav-link {{ request()->is('pelanggan*') ? 'active' : '' }}" href="{{ route('pelanggan.index') }}">
+                                <i class="fas fa-users"></i> Pelanggan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}"
-                                href="{{ route('reports.index') }}">
-                                <i class="fas fa-chart-bar"></i>
-                                Laporan
+                            <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                                <i class="fas fa-chart-bar"></i> Laporan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('stok*') ? 'active' : '' }}"
-                                href="{{ route('stok.index') }}">
-                                <i class="fas fa-boxes"></i>
-                                Stok
+                            <a class="nav-link {{ request()->is('stok*') ? 'active' : '' }}" href="{{ route('stok.index') }}">
+                                <i class="fas fa-boxes"></i> Stok
                             </a>
                         </li>
                     </ul>
 
                     <hr>
 
-                    <!-- Copyright notice at the bottom -->
                     <div class="text-center p-3 text-small">
                         Copyright &copy; Delbites 2025
                     </div>
                 </div>
             </div>
 
-            <!-- Main content -->
+            <!-- Main Content -->
             <div class="col-md-9 col-lg-10 content-wrapper ms-sm-auto px-md-4">
-                <!-- Top navbar -->
+                <!-- Top Navbar -->
                 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-4">
                     <div class="container-fluid">
-                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse"
-                            data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
-                            aria-label="Toggle navigation">
+                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
                             <span class="navbar-toggler-icon"></span>
                         </button>
 
-                        <div class="d-flex align-items-center">
-                            <span class="navbar-brand mb-0 h1">@yield('page-title', 'Dashboard')</span>
-                        </div>
+                        <span class="navbar-brand mb-0 h1">@yield('page-title', 'Dashboard')</span>
 
                         <div class="d-flex align-items-center">
-                            <!-- Bell icon without dropdown -->
+                            <!-- Notification Bell -->
                             <div class="me-3">
                                 <a class="nav-link position-relative" href="#">
                                     <i class="fas fa-bell"></i>
-                                    <span
-                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                                         3
                                     </span>
                                 </a>
                             </div>
 
-                            <!-- Admin profile image only -->
-                            <div class="dropdown p-3">
-                                <a href="#" class="d-flex align-items-center text-decoration-none"
-                                    id="dropdownUser1" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src="{{ asset('icon/logo.png') }}" alt="Admin" width="32"
-                                        height="32" class="rounded-circle me-2">
+                            <!-- User Dropdown -->
+                            <div class="dropdown p-2">
+                                <a href="#" class="d-flex align-items-center text-decoration-none" id="dropdownUserDetails" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}" alt="User Image" class="rounded-circle me-2" width="40" height="40">
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end text-small shadow"
-                                    aria-labelledby="dropdownUser1" style="min-width: auto;">
-                                    <li><a class="dropdown-item" href="#">Pengaturan</a></li>
-                                    <li><a class="dropdown-item" href="#">Profil</a></li>
-                                    <li>
-                                        <hr class="dropdown-divider">
-                                    </li>
-                                    <li>
-                                        <form method="POST" action="{{ route('logout') }}">
+                                <ul class="dropdown-menu dropdown-menu-end text-center shadow p-3" aria-labelledby="dropdownUserDetails" style="width: 250px;">
+                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}" alt="User Image" class="rounded-circle mx-auto d-block mb-2" width="60" height="60">
+                                    <strong>{{ auth()->user()->name }}</strong>
+
+                                    <div class="d-flex justify-content-between mt-3">
+                                        <a href="{{ route('profil.index') }}" class="btn btn-outline-primary btn-sm me-1 flex-fill">Profile</a>
+                                        <form method="POST" action="{{ route('logout') }}" class="ms-1 flex-fill">
                                             @csrf
-                                            <button type="submit" class="dropdown-item">Keluar</button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign out</button>
                                         </form>
-                                    </li>
+                                    </div>
                                 </ul>
                             </div>
                         </div>
                     </div>
                 </nav>
 
-                <!-- Flash messages -->
+                <!-- Flash Messages -->
                 @if (session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                            aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
                 @if (session('error'))
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"
-                            aria-label="Close"></button>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 @endif
 
-                <!-- Page content -->
+                <!-- Page Content -->
                 <main class="pb-5">
                     @yield('content')
                 </main>
@@ -209,7 +185,7 @@
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle with Popper -->
+    <!-- Bootstrap JS + Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- jQuery -->

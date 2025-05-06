@@ -67,8 +67,12 @@
 <body>
     <div class="header">
         <h1>DELBITES</h1>
-        <p>Jl. Merdeka No. 123, Jakarta</p>
-        <p>Telp: (021) 123-4567</p>
+        <p>Jl. Sisingamangaraja
+Desa Sitoluama-Kec. Laguboti
+Kab. Tobasa, Sumatera Utara,
+Indonesia
+</p>
+        <p>Telp : (0632) 331234</p>
         <p>================================</p>
         <h2>STRUK PESANAN</h2>
         <p>No: #ORD-{{ str_pad($pesanan->id, 3, '0', STR_PAD_LEFT) }}</p>
