@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\PelangganController;
 use App\Http\Controllers\PelangganWebController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StokController;
+use App\Http\Controllers\ProfilController; // <-- Tambahkan ini
 
 /*
 |--------------------------------------------------------------------------
@@ -48,4 +49,12 @@ Route::middleware(['auth:admin'])->group(function () {
 
     // Rute Stok Bahan
     Route::resource('stok', StokController::class);
+
+    // Rute Profil Admin
+    Route::middleware('auth:admin')->group(function () {
+        Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
+        Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    });
+    
+
 });

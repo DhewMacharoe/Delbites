@@ -25,6 +25,7 @@ class StokController extends Controller
             $query->where('nama_bahan', 'like', '%' . $request->search . '%');
         }
 
+        // Paginate hasil pencarian
         $stok = $query->orderBy('id')->paginate(10);
 
         return view('stok.index', compact('stok'));
@@ -43,15 +44,18 @@ class StokController extends Controller
      */
     public function store(Request $request)
     {
+        // Validasi data
         $request->validate([
             'nama_bahan' => 'required|string|max:255',
-            'jumlah' => 'required|integer|min:0',
+            'jumlah' => 'required|integer|min:1',  // Pastikan jumlah minimal 1
             'satuan' => 'required|in:kg,liter,pcs,tandan,dus',
         ]);
 
-        $data = $request->all();
-        $data['id_admin'] = Auth::id();
+        // Siapkan data untuk disimpan
+        $data = $request->only(['nama_bahan', 'jumlah', 'satuan']);
+        $data['id_admin'] = Auth::id(); // Menyertakan id_admin
 
+        // Simpan data
         StokBahan::create($data);
 
         return redirect()->route('stok.index')->with('success', 'Stok bahan berhasil ditambahkan.');
@@ -80,14 +84,16 @@ class StokController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Validasi data
         $request->validate([
             'nama_bahan' => 'required|string|max:255',
-            'jumlah' => 'required|integer|min:0',
+            'jumlah' => 'required|integer|min:1',  // Pastikan jumlah minimal 1
             'satuan' => 'required|in:kg,liter,pcs,tandan,dus',
         ]);
 
+        // Mencari stok berdasarkan ID dan update data
         $stok = StokBahan::findOrFail($id);
-        $stok->update($request->all());
+        $stok->update($request->only(['nama_bahan', 'jumlah', 'satuan']));  // Hanya memperbarui field yang diizinkan
 
         return redirect()->route('stok.index')->with('success', 'Stok bahan berhasil diperbarui.');
     }
@@ -97,6 +103,7 @@ class StokController extends Controller
      */
     public function destroy(string $id)
     {
+        // Menghapus stok bahan berdasarkan ID
         $stok = StokBahan::findOrFail($id);
         $stok->delete();
 
