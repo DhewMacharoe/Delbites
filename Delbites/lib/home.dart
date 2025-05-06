@@ -384,7 +384,7 @@ class MenuCard extends StatelessWidget {
                         ),
                         TextField(
                           decoration:
-                              const InputDecoration(labelText: 'Telepon'),
+                              const InputDecoration(labelText: 'Nomor WhatsApp'),
                           keyboardType: TextInputType.phone,
                           onChanged: (value) => tempPhone = value,
                         ),

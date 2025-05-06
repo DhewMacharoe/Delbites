@@ -46,13 +46,8 @@ class _IsiDataPelangganState extends State<IsiDataPelanggan> {
             ),
             TextField(
               controller: _teleponController,
-              decoration: InputDecoration(labelText: 'Nomor Telepon'),
+              decoration: InputDecoration(labelText: 'Nomor WhatsApp'),
               keyboardType: TextInputType.phone,
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: InputDecoration(labelText: 'Password'),
-              obscureText: true,
             ),
             SizedBox(height: 20),
             ElevatedButton(

@@ -398,7 +398,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             TextField(
                               controller: phoneController,
                               decoration: const InputDecoration(
-                                labelText: 'Nomor Telepon',
+                                labelText: 'Nomor WhatsApp',
                                 border: OutlineInputBorder(),
                               ),
                               keyboardType: TextInputType.phone,

@@ -40,7 +40,7 @@ class MenuCard extends StatelessWidget {
                   },
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                    labelText: "Nomor Telepon",
+                    labelText: "Nomor WhatsApp",
                   ),
                 ),
               ],
