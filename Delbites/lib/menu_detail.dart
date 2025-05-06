@@ -1,9 +1,8 @@
 import 'dart:convert';
 
-import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/suhu_selector.dart';
 import 'package:flutter/material.dart';
-import "package:flutter_rating_bar/flutter_rating_bar.dart";
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
 
 const String baseUrl = 'http://127.0.0.1:8000';
@@ -35,8 +34,9 @@ class MenuDetail extends StatefulWidget {
 class _MenuDetailState extends State<MenuDetail> {
   String? selectedSuhu;
   String? catatanTambahan;
-  // Hapus list pesanan lokal
+  List<Map<String, dynamic>> pesanan = [];
   double _userRating = 0;
+
   Future<void> addToCart() async {
     try {
       final response = await http.post(
@@ -71,27 +71,19 @@ class _MenuDetailState extends State<MenuDetail> {
 
   void _addToLocalCart() {
     try {
-      // Gunakan list pesanan global dari keranjang.dart
       int index = pesanan.indexWhere((item) =>
           item['id'] == widget.menuId &&
           (widget.kategori == 'makanan' || item['suhu'] == selectedSuhu));
-
       if (index != -1) {
-        // Update state untuk memicu rebuild
-        setState(() {
-          pesanan[index]['quantity'] += 1;
-        });
+        pesanan[index]['quantity'] += 1;
       } else {
-        // Update state untuk memicu rebuild
-        setState(() {
-          pesanan.add({
-            'id': widget.menuId,
-            'name': widget.name,
-            'price': int.tryParse(widget.price) ?? 0,
-            'quantity': 1,
-            if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
-            'catatan': catatanTambahan ?? '',
-          });
+        pesanan.add({
+          'id': widget.menuId,
+          'name': widget.name,
+          'price': int.tryParse(widget.price) ?? 0,
+          'quantity': 1,
+          if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
+          'catatan': catatanTambahan ?? '',
         });
       }
 
@@ -188,7 +180,7 @@ class _MenuDetailState extends State<MenuDetail> {
         title: Text(widget.name),
         backgroundColor: const Color(0xFF2D5EA2),
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +191,7 @@ class _MenuDetailState extends State<MenuDetail> {
                 child: Image.network(
                   widget.imageUrl.isNotEmpty
                       ? widget.imageUrl
-                      : 'https://via.placeholder.com/200', // Fallback to placeholder if imageUrl is null or empty
+                      : 'https://via.placeholder.com/200',
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
@@ -207,9 +199,7 @@ class _MenuDetailState extends State<MenuDetail> {
                     if (loadingProgress == null) {
                       return child;
                     } else {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
                   },
                   errorBuilder: (context, error, stackTrace) {
@@ -235,9 +225,23 @@ class _MenuDetailState extends State<MenuDetail> {
               style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 10),
-            Text(
-              widget.deskripsi,
-              style: const TextStyle(fontSize: 16),
+            const Text(
+              'Deskripsi:',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 5),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border.all(color: Colors.grey),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                widget.deskripsi,
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
             const SizedBox(height: 20),
             if (widget.kategori == 'minuman')
@@ -288,7 +292,7 @@ class _MenuDetailState extends State<MenuDetail> {
               },
               child: const Text("Kirim Rating"),
             ),
-            const Spacer(),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => _showCatatanDialog(context),
               style: ElevatedButton.styleFrom(
