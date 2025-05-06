@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:Delbites/home.dart';
 import 'package:Delbites/widgets/bottom_nav.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -85,12 +86,20 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: const Color(0xFF4C53A5),
+      backgroundColor: const Color(0xFF2D5EA2),
       elevation: 0,
-      automaticallyImplyLeading: false, // <-- Menghapus panah back
       title: const Text(
         'Riwayat Pemesanan',
         style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+      ),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: Colors.white),
+        onPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+          );
+        },
       ),
     );
   }
@@ -159,13 +168,13 @@ class _HistoryPesananPageState extends State<RiwayatPesananPage> {
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Jumlah: ${order["quantity"].toString()}"),
-                      Text("Metode Bayar: ${order["payment"].toString()}"),
-                      Text("Tanggal: ${order["date"].toString()}"),
+                      Text("Jumlah: ${order["quantity"]}"),
+                      Text("Metode Bayar: ${order["payment"]}"),
+                      Text("Tanggal: ${order["date"]}"),
                     ],
                   ),
                   trailing: Text(
-                    "Rp ${order["price"].toString()}",
+                    "Rp ${order["price"]}",
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 16),
                   ),

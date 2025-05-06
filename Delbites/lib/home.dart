@@ -21,7 +21,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+  int currentIndex = 0;
   List<Map<String, String>> allItems = [];
   List<Map<String, String>> displayedItems = [];
   bool isLoading = true;
@@ -283,7 +283,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBottomNavigation() {
+  Widget buildBottomNavigation() {
     return CurvedNavigationBar(
       backgroundColor: Colors.transparent,
       color: const Color(0xFF2D5EA2),

@@ -1,16 +1,11 @@
 import 'dart:convert';
 
 import 'package:Delbites/midtrans_payment_page.dart';
-import 'package:Delbites/services/midtrans_service.dart';
 import 'package:Delbites/utils/payment_utils.dart';
 import 'package:Delbites/waiting_page.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 const String baseUrl = 'http://127.0.0.1:8000'; // Tambahkan definisi baseUrl
 
@@ -24,7 +19,6 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
-  
   String? selectedPayment;
   bool isLoading = false;
   final TextEditingController nameController = TextEditingController();
@@ -152,26 +146,25 @@ class _CheckoutPageState extends State<CheckoutPage> {
         }),
       );
 
-      if (response.headers['content-type']
-              ?.contains('application/json') ==
+      if (response.headers['content-type']?.contains('application/json') ==
           true) {
         final midtransData = jsonDecode(response.body);
 
         if (response.statusCode == 200) {
-        final result = jsonDecode(response.body);
-        final String redirectUrl = result['redirect_url'] ?? '';
-        final String orderId = result['order_id'] ?? '';
+          final result = jsonDecode(response.body);
+          final String redirectUrl = result['redirect_url'] ?? '';
+          final String orderId = result['order_id'] ?? '';
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MidtransPaymentPage(
-              redirectUrl: redirectUrl,
-              orderId: orderId,
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MidtransPaymentPage(
+                redirectUrl: redirectUrl,
+                orderId: orderId,
+              ),
             ),
-          ),
-        );
-      } else {
+          );
+        } else {
           throw Exception(
               'Gagal membuat transaksi: ${midtransData['message']}');
         }
