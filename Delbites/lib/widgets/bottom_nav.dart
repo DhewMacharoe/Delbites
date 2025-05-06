@@ -32,7 +32,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         return;
     }
 
-    Navigator.push(
+    Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (_) => targetPage),
     );
