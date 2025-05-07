@@ -46,15 +46,15 @@ class _HomePageState extends State<HomePage> {
                   'name': item['nama_menu'].toString(),
                   'price': item['harga'].toString(),
                   'stok': item['stok'].toString(),
-                  'stok_terjual': (item['stok_terjual'] ?? '0').toString(),
+                  'stok_terjual': (item['total_terjual'] ?? '0').toString(),
                   'kategori': item['kategori'].toString(),
                   'image': item['gambar'].toString(),
                   'rating': (item['rating'] ?? '0.0').toString(),
                 })
             .toList();
 
-        allItems.sort((a, b) => int.parse(b['stok_terjual']!)
-            .compareTo(int.parse(a['stok_terjual']!)));
+        allItems.sort((a, b) => int.parse(b['total_terjual']!)
+            .compareTo(int.parse(a['total_terjual']!)));
 
         setState(() {
           displayedItems = allItems.take(8).toList();
@@ -93,6 +93,7 @@ class _HomePageState extends State<HomePage> {
 
   void applySearch(String query, {bool updateState = true}) {
     List<Map<String, String>> sourceItems;
+
     if (selectedCategory == 'Rekomendasi') {
       sourceItems = allItems
           .where((item) => int.parse(item['stok']!) > 0)
@@ -383,8 +384,8 @@ class MenuCard extends StatelessWidget {
                           onChanged: (value) => tempName = value,
                         ),
                         TextField(
-                          decoration:
-                              const InputDecoration(labelText: 'Nomor WhatsApp'),
+                          decoration: const InputDecoration(
+                              labelText: 'Nomor WhatsApp'),
                           keyboardType: TextInputType.phone,
                           onChanged: (value) => tempPhone = value,
                         ),

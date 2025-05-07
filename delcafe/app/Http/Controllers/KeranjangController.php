@@ -89,4 +89,16 @@ class KeranjangController extends Controller
 
         return response()->json(['message' => 'All items have been removed from the cart']);
     }
+
+    /**
+     * Get cart items for a specific customer.
+     */
+    public function getCartByCustomer($id_pelanggan)
+    {
+        $keranjangs = Keranjang::where('id_pelanggan', $id_pelanggan)
+            ->with('menu')
+            ->get();
+
+        return response()->json($keranjangs);
+    }
 }

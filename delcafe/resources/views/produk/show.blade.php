@@ -37,59 +37,54 @@
             </div>
         </div>
 
-        {{-- Kartu Informasi Detail --}}
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">Informasi Produk</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-borderless">
-                            <tr>
-                                <th width="200">ID Produk</th>
-                                <td>#{{ $produk->id }}</td>
-                            </tr>
-                            <tr>
-                                <th>Nama Produk</th>
-                                <td>{{ $produk->nama_menu }}</td>
-                            </tr>
-                            <tr>
-                                <th>Kategori</th>
-                                <td>
-                                    @if ($produk->kategori == 'makanan')
-                                        <span class="badge bg-success">Makanan</span>
-                                    @else
-                                        <span class="badge bg-info">Minuman</span>
-                                    @endif
-                                </td>
-                            </tr>
-                            <tr>
-                                <th>Harga</th>
-                                <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Stok</th>
-                                <td>{{ $produk->stok }}</td>
-                            </tr>
-                            <tr>
-                                <th>Terjual</th>
-                                <td>{{ $produk->stok_terjual }}</td>
-                            </tr>
-                            <tr>
-                                <th>Ditambahkan Oleh</th>
-                                <td>{{ $produk->admin->nama ?? 'Admin' }}</td>
-                            </tr>
-                            <tr>
-                                <th>Tanggal Ditambahkan</th>
-                                <td>{{ $produk->created_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                            <tr>
-                                <th>Terakhir Diperbarui</th>
-                                <td>{{ $produk->updated_at->format('d/m/Y H:i') }}</td>
-                            </tr>
-                        </table>
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">Informasi Produk</h5>
                     </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <th width="200">ID Produk</th>
+                                    <td>#{{ $produk->id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Nama Produk</th>
+                                    <td>{{ $produk->nama_menu }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Kategori</th>
+                                    <td>
+                                        @if ($produk->kategori == 'makanan')
+                                            <span class="badge bg-success">Makanan</span>
+                                        @else
+                                            <span class="badge bg-info">Minuman</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th>Harga</th>
+                                    <td>Rp {{ number_format($produk->harga, 0, ',', '.') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Stok</th>
+                                    <td>{{ $produk->stok }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Ditambahkan Oleh</th>
+                                    <td>{{ $produk->admin->nama ?? 'Admin' }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Tanggal Ditambahkan</th>
+                                    <td>{{ $produk->created_at->format('d/m/Y H:i') }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Terakhir Diperbarui</th>
+                                    <td>{{ $produk->updated_at->format('d/m/Y H:i') }}</td>
+                                </tr>
+                            </table>
+                        </div>
 
                     {{-- Tombol Aksi --}}
                     <div class="d-flex justify-content-end gap-2 mt-3">
