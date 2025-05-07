@@ -4,6 +4,10 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Pelanggan;
+use App\Models\Admin;
+use App\Models\DetailPemesanan;
+use App\Models\Pembayaran;
 
 class Pemesanan extends Model
 {
@@ -24,7 +28,7 @@ class Pemesanan extends Model
 
     public function pelanggan()
     {
-        return $this->belongsTo(Pelanggan::class, 'id_pelanggan');
+        return $this->belongsTo(Pelanggan::class, 'id_pelanggan','id');
     }
 
     public function admin()

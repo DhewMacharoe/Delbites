@@ -39,4 +39,20 @@ class PelangganWebController extends Controller
 
         return view('pelanggan.index', compact('pelanggan', 'sortBy', 'sortOrder'));
     }
+    public function destroy($id)
+{
+    $pelanggan = Pelanggan::findOrFail($id);
+
+    if ($pelanggan->pemesanan()->exists()) {
+        return redirect()->route('pelanggan.index')
+            ->with('error', 'Tidak dapat menghapus pelanggan karena masih memiliki data pemesanan.');
+    }
+
+    $pelanggan->delete();
+
+    return redirect()->route('pelanggan.index')
+        ->with('success', 'Pelanggan berhasil dihapus.');
+}
+
+
 }

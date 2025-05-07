@@ -1,5 +1,7 @@
 @extends('layouts.admin')
 
+@php use Illuminate\Support\Str; @endphp
+
 @section('title', 'Menejemen Pesanan - DelBites')
 
 @section('page-title', 'Menejemen Pesanan')
@@ -128,13 +130,32 @@
                                                                 </a>
                                                             </li>
                                                         @endif
-                                                        <li>
-                                                            <a class="dropdown-item"
-                                                                href="https://wa.me/{{ $p->pelanggan->telepon }}"
-                                                                target="_blank">
-                                                                <i class="fab fa-whatsapp me-2"></i> Hubungi Pelanggan
-                                                            </a>
-                                                        </li>
+                                                        @php
+    $telepon = preg_replace('/[^0-9]/', '', $p->pelanggan->telepon);
+    if (Str::startsWith($telepon, '0')) {
+        $telepon = '62' . substr($telepon, 1);
+    }
+
+    $statusText = match($p->status) {
+        'menunggu' => 'Pesanan Anda sedang menunggu konfirmasi.',
+        'pembayaran' => 'Silakan segera lakukan pembayaran.',
+        'dibayar' => 'Pembayaran Anda telah kami terima.',
+        'diproses' => 'Pesanan Anda sedang diproses.',
+        'selesai' => 'Pesanan Anda telah selesai. Terima kasih!',
+        'dibatalkan' => 'Pesanan Anda telah dibatalkan.',
+        default => 'Status pesanan Anda: ' . $p->status,
+    };
+
+    $pesan = "Halo {$p->pelanggan->nama},\n\nPesanan Anda di *DelBites*:\nTotal: Rp " . number_format($p->total_harga, 0, ',', '.') . "\nStatus: *" . ucfirst($p->status) . "*\n\n" . $statusText . "\n\nTerima kasih telah memesan.";
+@endphp
+
+<a class="dropdown-item" 
+   href="https://wa.me/{{ $telepon }}?text={{ urlencode($pesan) }}" 
+   target="_blank">
+    <i class="fab fa-whatsapp me-2"></i> Hubungi Pelanggan
+</a>
+
+                                                        
                                                         @if (!in_array($p->status, ['selesai', 'dibatalkan']))
                                                             <li>
                                                                 <form action="{{ route('pesanan.batalkan', $p->id) }}"

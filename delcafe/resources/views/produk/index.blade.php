@@ -1,16 +1,16 @@
 @extends('layouts.admin')
 
-@section('title', 'Menejemen Menu - DelBites')
-
-@section('page-title', 'Menejemen Menu')
+@section('title', 'Manajemen Menu - DelBites')
+@section('page-title', 'Manajemen Menu')
 
 @section('content')
 <div class="container-fluid">
+    <!-- Filter Form -->
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <form action="{{ route('produk.index') }}" method="GET" class="row g-3">
+                    <form action="{{ route('produk.index') }}" method="GET" class="row g-3 align-items-end">
                         <div class="col-md-4">
                             <label for="kategori" class="form-label">Filter Kategori</label>
                             <select name="kategori" id="kategori" class="form-select">
@@ -21,9 +21,9 @@
                         </div>
                         <div class="col-md-4">
                             <label for="search" class="form-label">Cari Menu</label>
-                            <input type="text" class="form-control" id="search" name="search" value="{{ request('search') }}" placeholder="Masukkan nama Menu...">
+                            <input type="text" name="search" id="search" class="form-control" value="{{ request('search') }}" placeholder="Masukkan nama menu...">
                         </div>
-                        <div class="col-md-4 d-flex align-items-end">
+                        <div class="col-md-4 text-end">
                             <button type="submit" class="btn btn-primary me-2">Filter</button>
                             <a href="{{ route('produk.index') }}" class="btn btn-secondary">Reset</a>
                         </div>
@@ -33,6 +33,7 @@
         </div>
     </div>
 
+    <!-- Menu Table -->
     <div class="row">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
@@ -44,8 +45,8 @@
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
                                 <tr>
                                     <th>Gambar</th>
                                     <th>Nama Menu</th>
@@ -60,37 +61,25 @@
                                 @forelse($produk as $p)
                                 <tr>
                                     <td>
-                                        @if($p->gambar)
-                                            <img src="{{ asset('storage/' . $p->gambar) }}" alt="{{ $p->nama_menu }}" class="img-thumbnail" width="50">
-                                        @else
-                                            <img src="{{ asset('icon/no-image.png') }}" alt="No Image" class="img-thumbnail" width="50">
-                                        @endif
+                                        <img src="{{ $p->gambar ? asset('storage/' . $p->gambar) : asset('icon/no-image.png') }}" alt="{{ $p->nama_menu }}" class="img-thumbnail" width="50">
                                     </td>
                                     <td>{{ $p->nama_menu }}</td>
                                     <td>
-                                        @if($p->kategori == 'makanan')
-                                            <span class="badge bg-success">Makanan</span>
-                                        @else
-                                            <span class="badge bg-info">Minuman</span>
-                                        @endif
+                                        <span class="badge {{ $p->kategori == 'makanan' ? 'bg-success' : 'bg-info' }}">
+                                            {{ ucfirst($p->kategori) }}
+                                        </span>
                                     </td>
                                     <td>Rp {{ number_format($p->harga, 0, ',', '.') }}</td>
                                     <td>{{ $p->stok }}</td>
                                     <td>{{ $p->stok_terjual }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ route('produk.show', $p->id) }}" class="btn btn-sm btn-info">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                            <a href="{{ route('produk.edit', $p->id) }}" class="btn btn-sm btn-warning">
-                                                <i class="fas fa-edit"></i>
-                                            </a>
-                                            <form action="{{ route('produk.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus produk ini?')">
+                                            <a href="{{ route('produk.show', $p->id) }}" class="btn btn-sm btn-info" title="Lihat"><i class="fas fa-eye"></i></a>
+                                            <a href="{{ route('produk.edit', $p->id) }}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                                            <form action="{{ route('produk.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus produk ini?')" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Hapus"><i class="fas fa-trash"></i></button>
                                             </form>
                                         </div>
                                     </td>
@@ -103,8 +92,9 @@
                             </tbody>
                         </table>
                     </div>
-                    
-                    <div class="d-flex justify-content-center mt-4">
+
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-center mt-3">
                         {{ $produk->appends(request()->query())->links() }}
                     </div>
                 </div>
@@ -116,8 +106,7 @@
 
 @section('scripts')
 <script>
-    // Auto submit form saat filter berubah
-    document.getElementById('kategori').addEventListener('change', function() {
+    document.getElementById('kategori').addEventListener('change', function () {
         this.form.submit();
     });
 </script>

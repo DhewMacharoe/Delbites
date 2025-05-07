@@ -1,12 +1,18 @@
 @extends('layouts.admin')
 
-@section('title', 'Menejemen Pelanggan - DelBites')
-
-@section('page-title', 'Menejemen Pelanggan')
+@section('title', 'Manajemen Pelanggan - DelBites')
+@section('page-title', 'Manajemen Pelanggan')
 
 @section('content')
 <div class="container">
     <h1 class="mb-4">Daftar Pelanggan</h1>
+
+    {{-- Flash Message --}}
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
+    @elseif(session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
+    @endif
 
     {{-- Filter dan Search --}}
     <div class="card border-0 shadow-sm mb-4">
@@ -22,7 +28,8 @@
                 </div>
                 <div class="col-md-4">
                     <label for="search" class="form-label">Cari Pelanggan</label>
-                    <input type="text" class="form-control" id="search" name="search" value="{{ request('search') }}" placeholder="Masukkan nama atau telepon...">
+                    <input type="text" name="search" id="search" class="form-control"
+                           value="{{ request('search') }}" placeholder="Masukkan nama atau telepon...">
                 </div>
                 <div class="col-md-4 d-flex align-items-end">
                     <button type="submit" class="btn btn-primary me-2">Filter</button>
@@ -48,11 +55,7 @@
                                 Telepon {!! $sortBy == 'telepon' ? ($sortOrder == 'asc' ? '↑' : '↓') : '' !!}
                             </a>
                         </th>
-                        <th>
-                            <a href="{{ route('pelanggan.index', array_merge(request()->all(), ['sort_by' => 'status', 'sort_order' => $sortBy == 'status' && $sortOrder == 'asc' ? 'desc' : 'asc'])) }}">
-                                Status {!! $sortBy == 'status' ? ($sortOrder == 'asc' ? '↑' : '↓') : '' !!}
-                            </a>
-                        </th>
+                        <th>Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -60,7 +63,13 @@
                         <tr>
                             <td>{{ $p->nama }}</td>
                             <td>{{ $p->telepon }}</td>
-                            <td>{{ ucfirst($p->status) }}</td>
+                            <td>
+                                <form action="{{ route('pelanggan.destroy', $p->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus pelanggan ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr>

@@ -9,6 +9,7 @@ use App\Models\Pelanggan;
 
 class KeranjangController extends Controller
 {
+
     public function index()
     {
         $keranjangs = Keranjang::with(['pelanggan', 'menu'])->get();
@@ -37,8 +38,6 @@ class KeranjangController extends Controller
             'kategori' => 'required|in:makanan,minuman',
             'harga' => 'required|numeric|min:0',
             'jumlah' => 'required|integer|min:1',
-            'suhu' => 'nullable|string|max:20', // Added validation for temperature
-            'catatan' => 'nullable|string|max:255', // Added validation for notes
         ]);
 
         // Create the cart item
@@ -62,8 +61,6 @@ class KeranjangController extends Controller
             'kategori' => 'sometimes|in:makanan,minuman',
             'harga' => 'sometimes|numeric|min:0',
             'jumlah' => 'sometimes|integer|min:1',
-            'suhu' => 'nullable|string|max:20', // Added validation for temperature
-            'catatan' => 'nullable|string|max:255', // Added validation for notes
         ]);
 
         // Update the cart item
@@ -91,17 +88,5 @@ class KeranjangController extends Controller
         Keranjang::where('id_pelanggan', $id_pelanggan)->delete();
 
         return response()->json(['message' => 'All items have been removed from the cart']);
-    }
-    
-    /**
-     * Get cart items for a specific customer.
-     */
-    public function getCartByCustomer($id_pelanggan)
-    {
-        $keranjangs = Keranjang::where('id_pelanggan', $id_pelanggan)
-            ->with('menu')
-            ->get();
-            
-        return response()->json($keranjangs);
     }
 }

@@ -15,7 +15,6 @@ class Menu extends Model
         'id_admin',
         'nama_menu',
         'kategori',
-        'suhu',
         'harga',
         'stok',
         'gambar',

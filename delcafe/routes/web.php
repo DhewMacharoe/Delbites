@@ -40,6 +40,7 @@ Route::middleware(['auth:admin'])->group(function () {
 
     // Rute Pelanggan
     Route::get('/pelanggan', [PelangganWebController::class, 'index'])->name('pelanggan.index');
+    Route::delete('/pelanggan/{id}', [PelangganWebController::class, 'destroy'])->name('pelanggan.destroy');
 
     // Rute Laporan
     Route::resource('reports', ReportController::class);

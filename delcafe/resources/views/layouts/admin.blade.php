@@ -113,7 +113,7 @@
                     <hr>
 
                     <div class="text-center p-3 text-small">
-                        Copyright &copy; Delbites 2025
+                        &copy; DelBites 2025
                     </div>
                 </div>
             </div>

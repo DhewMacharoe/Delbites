@@ -15,9 +15,9 @@ class Pelanggan extends Model
         'nama',
         'telepon',
     ];
+    public function pemesanan()
+{
+    return $this->hasMany(Pemesanan::class, 'id_pelanggan');
+}
 
-    public function pemesanans()
-    {
-        return $this->hasMany(Pemesanan::class, 'id_pelanggan', 'id');
-    }
 }

@@ -50,12 +50,6 @@
                                 <i class="fas fa-file-pdf me-1"></i> Ekspor PDF
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item"
-                                href="{{ route('reports.export.excel', ['start_date' => $startDate->format('Y-m-d'), 'end_date' => $endDate->format('Y-m-d')]) }}">
-                                <i class="fas fa-file-excel me-1"></i> Ekspor Excel
-                            </a>
-                        </li>
                     </ul>
                 </div>
             </div>

@@ -48,8 +48,6 @@ Route::middleware('jwt.auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-Route::get('/midtrans/transaction', [MidtransController::class, 'createTransaction']);
-// Route::get('/midtrans/transaction', [MidtransController::class, 'getTransactionInfo']);
 
 // Route::middleware('auth:sanctum')->group(function () {
 //     Route::post('/pembayaran/create', [PembayaranController::class, 'createTransaction']);
@@ -63,5 +61,5 @@ Route::post('/midtrans/create-transaction', [MidtransController::class, 'createT
 Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'checkStatus']);
 Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
 
-// Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
-// Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);
+Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
+Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);

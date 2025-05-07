@@ -10,19 +10,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PesananController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $query = Pemesanan::with(['pelanggan']);
 
-        // Filter berdasarkan status
         if ($request->has('status') && $request->status != '') {
             $query->where('status', $request->status);
         }
 
-        // Filter berdasarkan metode pembayaran
         if ($request->has('metode_pembayaran') && $request->metode_pembayaran != '') {
             $query->where('metode_pembayaran', $request->metode_pembayaran);
         }
@@ -32,13 +27,9 @@ class PesananController extends Controller
         return view('pesanan.index', compact('pesanan'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(Request $request)
     {
         try {
-            // Validasi request
             $request->validate([
                 'items' => 'required|array',
                 'items.*.nama_menu' => 'required|string',
@@ -48,7 +39,6 @@ class PesananController extends Controller
                 'metode_pembayaran' => 'required|string|in:tunai,qris,transfer bank,midtrans',
             ]);
 
-            // Buat pesanan baru
             $pemesanan = new Pemesanan();
             $pemesanan->id_pelanggan = auth()->id;
             $pemesanan->total_harga = $request->total_harga;
@@ -57,7 +47,6 @@ class PesananController extends Controller
             $pemesanan->waktu_pemesanan = now();
             $pemesanan->save();
 
-            // Simpan detail pesanan
             foreach ($request->items as $item) {
                 DetailPemesanan::create([
                     'id_pemesanan' => $pemesanan->id,
@@ -85,55 +74,36 @@ class PesananController extends Controller
         }
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         //
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-        $pesanan = Pemesanan::with(['pelanggan', 'detailPemesanans.menu'])->findOrFail($id);
+        $pesanan = Pemesanan::with(['pelanggan', 'detailPemesanan.menu'])->findOrFail($id);
         return response()->json($pesanan);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(string $id)
     {
         //
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, string $id)
     {
         //
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(string $id)
     {
         //
     }
 
-    /**
-     * Cetak struk pesanan
-     */
     public function cetakStruk($id)
     {
-        $pesanan = Pemesanan::with(['pelanggan', 'detailPemesanans.menu'])->findOrFail($id);
+        $pesanan = Pemesanan::with(['pelanggan', 'detailPemesanan.menu'])->findOrFail($id);
 
-        // Cek status pesanan
         if (!in_array($pesanan->status, ['dibayar', 'diproses', 'selesai'])) {
             return redirect()->back()->with('error', 'Struk hanya dapat dicetak untuk pesanan yang sudah dibayar.');
         }
@@ -142,14 +112,10 @@ class PesananController extends Controller
         return $pdf->stream('struk-pesanan-' . $id . '.pdf');
     }
 
-    /**
-     * Batalkan pesanan
-     */
     public function batalkanPesanan($id)
     {
         $pesanan = Pemesanan::findOrFail($id);
 
-        // Cek status pesanan
         if (in_array($pesanan->status, ['selesai', 'dibatalkan'])) {
             return redirect()->back()->with('error', 'Pesanan yang sudah selesai atau dibatalkan tidak dapat dibatalkan.');
         }
