@@ -309,7 +309,10 @@ class _HomePageState extends State<HomePage> {
         } else if (index == 2) {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => KeranjangPage()),
+            MaterialPageRoute(
+              builder: (context) => KeranjangPage(
+                  idPelanggan: 1), // Ganti dengan ID pelanggan yang sesuai
+            ),
           );
         }
       },

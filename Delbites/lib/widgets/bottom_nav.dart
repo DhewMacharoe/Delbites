@@ -26,7 +26,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
         targetPage = const RiwayatPesananPage();
         break;
       case 2:
-        targetPage = const KeranjangPage();
+        targetPage = KeranjangPage(idPelanggan: 1);
         break;
       default:
         return;

@@ -16,8 +16,6 @@ class DatabaseSeeder extends Seeder
             PelangganSeeder::class,
             MenuSeeder::class,
             StokBahanSeeder::class,
-            PemesananSeeder::class,
-            DetailPemesananSeeder::class,
             // LaporanSeeder::class,
         ]);
     }
