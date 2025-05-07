@@ -8,8 +8,7 @@ use App\Http\Controllers\Api\PelangganController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\KeranjangController;
 use App\Http\Controllers\MidtransController;
-use App\Http\Controllers\PembayaranController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DetailPemesananController;
 
 
 Route::get('/menu', [MenuController::class, 'index']);
@@ -17,6 +16,8 @@ Route::get('/menu/{id}', [MenuController::class, 'show']);
 Route::post('/menu', [MenuController::class, 'store']);
 Route::put('/menu/{id}', [MenuController::class, 'update']);
 Route::delete('/menu/{id}', [MenuController::class, 'destroy']);
+Route::get('/top-menu', [MenuController::class, 'topMenu']);
+
 
 Route::get('/pelanggan', [PelangganController::class, 'index']);
 Route::get('/pelanggan/{id}', [PelangganController::class, 'show']);
@@ -42,6 +43,12 @@ Route::get('/keranjang/{id}', [KeranjangController::class, 'show']);
 Route::post('/keranjang', [KeranjangController::class, 'store']);
 Route::put('/keranjang/{id}', [KeranjangController::class, 'update']);
 Route::delete('/keranjang/{id}', [KeranjangController::class, 'destroy']);
+
+Route::get('/detail-pemesanan', [DetailPemesananController::class, 'index']);
+Route::post('/detail-pemesanan', [DetailPemesananController::class, 'store']);
+Route::get('/detail-pemesanan/{id}', [DetailPemesananController::class, 'show']);
+Route::put('/detail-pemesanan/{id}', [DetailPemesananController::class, 'update']);
+Route::delete('/detail-pemesanan/{id}', [DetailPemesananController::class, 'destroy']);
 
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);

@@ -8,16 +8,27 @@ use App\Models\Menu;
 
 class MenuController extends Controller
 {
+    // Menampilkan semua menu dengan total penjualan
     public function index()
     {
-        return response()->json(Menu::all());
+        $menu = Menu::with('detailPemesanans')->get();
+
+        // Menambahkan total penjualan per menu
+        $menu = $menu->map(function ($item) {
+            $item->total_terjual = $item->detailPemesanans->sum('jumlah');
+            return $item;
+        });
+
+        return response()->json($menu);
     }
 
+    // Menampilkan menu tertentu berdasarkan ID
     public function show($id)
     {
         return response()->json(Menu::findOrFail($id));
     }
 
+    // Menambahkan menu baru
     public function store(Request $request)
     {
         $request->validate([
@@ -33,6 +44,7 @@ class MenuController extends Controller
         return response()->json($menu, 201);
     }
 
+    // Memperbarui menu
     public function update(Request $request, $id)
     {
         $menu = Menu::findOrFail($id);
@@ -49,9 +61,27 @@ class MenuController extends Controller
         return response()->json($menu);
     }
 
+    // Menghapus menu
     public function destroy($id)
     {
         Menu::findOrFail($id)->delete();
         return response()->json(['message' => 'Menu berhasil dihapus']);
+    }
+
+    // Menampilkan menu terlaris
+    public function topMenu()
+    {
+        $menu = Menu::with('detailPemesanans')->get();
+
+        // Menambahkan total penjualan per menu
+        $menu = $menu->map(function ($item) {
+            $item->total_terjual = $item->detailPemesanans->sum('jumlah');
+            return $item;
+        });
+
+        // Urutkan berdasarkan jumlah penjualan terbanyak
+        $sortedMenu = $menu->sortByDesc('total_terjual')->values()->take(8);
+
+        return response()->json($sortedMenu);
     }
 }

@@ -18,18 +18,14 @@ class Menu extends Model
         'harga',
         'stok',
         'gambar',
-        'stok_terjual',
+        'deskripsi',
+        'rating'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'harga' => 'integer',
         'stok' => 'integer',
-        'stok_terjual' => 'integer',
+        'rating' => 'float',
     ];
 
     // Relasi dengan Admin
@@ -44,8 +40,21 @@ class Menu extends Model
         return $this->hasMany(DetailPemesanan::class, 'id_menu', 'id');
     }
 
+    // Akses total penjualan
+    public function getTotalTerjualAttribute()
+    {
+        return $this->detailPemesanans()->sum('jumlah');
+    }
+
+    // Ambil 8 menu dengan penjualan terbanyak
     public static function getTopMenuItems()
     {
-        return self::orderBy('stok_terjual', 'desc')->limit(8)->get();
+        return self::with('detailPemesanans')
+            ->get()
+            ->sortByDesc(function ($menu) {
+                return $menu->total_terjual;
+            })
+            ->take(8)
+            ->values();
     }
 }

@@ -10,7 +10,6 @@ class DetailPemesanan extends Model
     use HasFactory;
 
     protected $table = 'detail_pemesanan';
-    // Primary key default 'id' tidak perlu didefinisikan
 
     protected $fillable = [
         'id_pemesanan',
@@ -20,26 +19,13 @@ class DetailPemesanan extends Model
         'subtotal',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'jumlah' => 'integer',
-        'harga_satuan' => 'integer',
-        'subtotal' => 'integer',
-    ];
-
-    // Relasi dengan Pemesanan
     public function pemesanan()
     {
-        return $this->belongsTo(Pemesanan::class, 'id_pemesanan', 'id');
+        return $this->belongsTo(Pemesanan::class, 'id_pemesanan');
     }
 
-    // Relasi dengan Menu
     public function menu()
     {
-        return $this->belongsTo(Menu::class, 'id_menu', 'id');
+        return $this->belongsTo(Menu::class, 'id_menu');
     }
 }
