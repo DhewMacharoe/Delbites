@@ -84,4 +84,14 @@ class MenuController extends Controller
 
         return response()->json($sortedMenu);
     }
+    public function getTopMenu()
+    {
+        $topMenu = Menu::getTopMenuItems();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Top 8 menu terlaris berhasil diambil',
+            'data' => $topMenu
+        ]);
+    }
 }

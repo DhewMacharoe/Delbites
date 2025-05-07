@@ -17,6 +17,19 @@ class MenuService {
     }
   }
 
+  Future<List<Menu>> fetchTopMenus() async {
+    final response = await http.get(Uri.parse('$baseUrl/top'));
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+
+      List<dynamic> data = responseData['data'];
+      return data.map((item) => Menu.fromJson(item)).toList();
+    } else {
+      throw Exception('Gagal mengambil top menu');
+    }
+  }
+
   Future<bool> tambahMenu({
     required String namaMenu,
     required int harga,

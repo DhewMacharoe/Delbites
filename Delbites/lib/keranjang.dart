@@ -1,11 +1,9 @@
+import 'dart:convert';
+
 import 'package:Delbites/checkout.dart';
 import 'package:Delbites/home.dart';
-import 'package:Delbites/riwayat_pesanan.dart';
-import 'package:Delbites/widgets/bottom_nav.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class KeranjangPage extends StatefulWidget {
   final int idPelanggan;
@@ -30,7 +28,8 @@ class _KeranjangPageState extends State<KeranjangPage> {
   Future<void> _loadKeranjang() async {
     try {
       final response = await http.get(
-        Uri.parse('http://localhost:8000/api/keranjang/pelanggan/${widget.idPelanggan}'),
+        Uri.parse(
+            'http://localhost:8000/api/keranjang/pelanggan/${widget.idPelanggan}'),
       );
 
       if (response.statusCode == 200) {
@@ -68,72 +67,71 @@ class _KeranjangPageState extends State<KeranjangPage> {
   }
 
   Future<void> _updateQuantity(int index, int newQuantity) async {
-  try {
-    final item = pesanan[index];
-    
-    if (newQuantity < 1) {
-      // Jika quantity menjadi 0, hapus item
-      await _removeItem(index);
-      return;
-    }
+    try {
+      final item = pesanan[index];
 
-    final response = await http.put(
-      Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'jumlah': newQuantity,
-      }),
-    );
+      if (newQuantity < 1) {
+        // Jika quantity menjadi 0, hapus item
+        await _removeItem(index);
+        return;
+      }
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      setState(() {
-        pesanan[index]['quantity'] = newQuantity;
-      });
-    } else {
-      throw Exception('Gagal mengupdate jumlah');
-    }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal mengupdate jumlah: ${e.toString()}'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    _loadKeranjang(); // Reload data untuk sinkronisasi
-  }
-}
+      final response = await http.put(
+        Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'jumlah': newQuantity,
+        }),
+      );
 
-Future<void> _removeItem(int index) async {
-  try {
-    final item = pesanan[index];
-    final response = await http.delete(
-      Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
-    );
-
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      setState(() {
-        pesanan.removeAt(index);
-      });
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState(() {
+          pesanan[index]['quantity'] = newQuantity;
+        });
+      } else {
+        throw Exception('Gagal mengupdate jumlah');
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Item berhasil dihapus dari keranjang'),
-          backgroundColor: Colors.green,
+        SnackBar(
+          content: Text('Gagal mengupdate jumlah: ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
-    } else {
-      throw Exception('Gagal menghapus item');
+      _loadKeranjang(); // Reload data untuk sinkronisasi
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal menghapus item: ${e.toString()}'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    _loadKeranjang(); // Reload data untuk sinkronisasi
   }
-}
- 
+
+  Future<void> _removeItem(int index) async {
+    try {
+      final item = pesanan[index];
+      final response = await http.delete(
+        Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
+      );
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        setState(() {
+          pesanan.removeAt(index);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Item berhasil dihapus dari keranjang'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        throw Exception('Gagal menghapus item');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menghapus item: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      _loadKeranjang(); // Reload data untuk sinkronisasi
+    }
+  }
 
   int getTotalHarga() {
     int total = 0;
@@ -229,7 +227,8 @@ Future<void> _removeItem(int index) async {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.fastfood, size: 50, color: Colors.grey[700]),
+                            Icon(Icons.fastfood,
+                                size: 50, color: Colors.grey[700]),
                             const SizedBox(width: 10),
                             Expanded(
                               child: Column(
@@ -237,16 +236,19 @@ Future<void> _removeItem(int index) async {
                                 children: [
                                   Text(
                                     item['name'],
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   Text(
                                     'Rp${formatPrice(item['price'])}',
                                     style: const TextStyle(color: Colors.grey),
                                   ),
-                                  if (item['suhu'] != null && item['suhu'].isNotEmpty)
+                                  if (item['suhu'] != null &&
+                                      item['suhu'].isNotEmpty)
                                     Text(
                                       'Suhu: ${item['suhu']}',
-                                      style: const TextStyle(color: Colors.grey),
+                                      style:
+                                          const TextStyle(color: Colors.grey),
                                     ),
                                 ],
                               ),
@@ -254,9 +256,11 @@ Future<void> _removeItem(int index) async {
                             Row(
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove_circle, color: Colors.black),
+                                  icon: const Icon(Icons.remove_circle,
+                                      color: Colors.black),
                                   onPressed: () {
-                                    _updateQuantity(index, item['quantity'] - 1);
+                                    _updateQuantity(
+                                        index, item['quantity'] - 1);
                                   },
                                 ),
                                 Text(
@@ -264,16 +268,19 @@ Future<void> _removeItem(int index) async {
                                   style: const TextStyle(fontSize: 16),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.add_circle, color: Colors.black),
+                                  icon: const Icon(Icons.add_circle,
+                                      color: Colors.black),
                                   onPressed: () {
-                                    _updateQuantity(index, item['quantity'] + 1);
+                                    _updateQuantity(
+                                        index, item['quantity'] + 1);
                                   },
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        if (item['catatan'] != null && item['catatan'].isNotEmpty)
+                        if (item['catatan'] != null &&
+                            item['catatan'].isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(top: 8.0),
                             child: Text(
@@ -313,11 +320,13 @@ Future<void> _removeItem(int index) async {
                   children: [
                     const Text(
                       'Total Harga',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                     Text(
                       'Rp ${formatPrice(getTotalHarga())}',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
                     ),
                   ],
                 ),

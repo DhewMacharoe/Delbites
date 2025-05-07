@@ -183,24 +183,6 @@ class MenuCard extends StatelessWidget {
                       style: const TextStyle(color: Colors.red),
                     ),
                     const SizedBox(height: 4),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Text(
-                        item['deskripsi'] ?? '',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black87,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),

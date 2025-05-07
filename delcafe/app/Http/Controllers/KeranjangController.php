@@ -98,6 +98,7 @@ public function store(Request $request)
         return response()->json(['message' => 'Seluruh keranjang telah dikosongkan']);
     }
 
+
     /**
      * Get cart items for a specific customer.
      */
@@ -106,6 +107,7 @@ public function store(Request $request)
         $keranjangs = Keranjang::where('id_pelanggan', $id_pelanggan)
             ->with('menu')
             ->get();
+
 
         return response()->json($keranjangs);
     }
