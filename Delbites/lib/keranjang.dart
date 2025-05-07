@@ -66,7 +66,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
       );
     }
   }
-  
+
   Future<void> _updateQuantity(int index, int newQuantity) async {
   try {
     final item = pesanan[index];
@@ -200,96 +200,160 @@ Future<void> _removeItem(int index) async {
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16.0),
-      itemCount: pesanan.length,
-      itemBuilder: (context, index) {
-        final item = pesanan[index];
-        return Dismissible(
-          key: Key(item['id'].toString()),
-          direction: DismissDirection.endToStart,
-          background: Container(
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            color: Colors.red,
-            child: const Icon(Icons.delete, color: Colors.white),
-          ),
-          onDismissed: (direction) => _removeItem(index),
-          child: Card(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(10.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.fastfood, size: 50, color: Colors.grey[700]),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      children: [
+        Expanded(
+          child: ListView.builder(
+            padding: const EdgeInsets.all(16.0),
+            itemCount: pesanan.length,
+            itemBuilder: (context, index) {
+              final item = pesanan[index];
+              return Dismissible(
+                key: Key(item['id'].toString()),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerRight,
+                  padding: const EdgeInsets.only(right: 20),
+                  color: Colors.red,
+                  child: const Icon(Icons.delete, color: Colors.white),
+                ),
+                onDismissed: (direction) => _removeItem(index),
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              item['name'],
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              'Rp${formatPrice(item['price'])}',
-                              style: const TextStyle(color: Colors.grey),
-                            ),
-                            if (item['suhu'] != null && item['suhu'].isNotEmpty)
-                              Text(
-                                'Suhu: ${item['suhu']}',
-                                style: const TextStyle(color: Colors.grey),
+                            Icon(Icons.fastfood, size: 50, color: Colors.grey[700]),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item['name'],
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Rp${formatPrice(item['price'])}',
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                  if (item['suhu'] != null && item['suhu'].isNotEmpty)
+                                    Text(
+                                      'Suhu: ${item['suhu']}',
+                                      style: const TextStyle(color: Colors.grey),
+                                    ),
+                                ],
                               ),
+                            ),
+                            Row(
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.remove_circle, color: Colors.black),
+                                  onPressed: () {
+                                    _updateQuantity(index, item['quantity'] - 1);
+                                  },
+                                ),
+                                Text(
+                                  item['quantity'].toString(),
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.add_circle, color: Colors.black),
+                                  onPressed: () {
+                                    _updateQuantity(index, item['quantity'] + 1);
+                                  },
+                                ),
+                              ],
+                            ),
                           ],
                         ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle,
-                                color: Colors.black),
-                            onPressed: () {
-                              _updateQuantity(index, item['quantity'] - 1);
-                            },
+                        if (item['catatan'] != null && item['catatan'].isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8.0),
+                            child: Text(
+                              'Catatan: ${item['catatan']}',
+                              style: const TextStyle(
+                                fontStyle: FontStyle.italic,
+                                color: Colors.grey,
+                              ),
+                            ),
                           ),
-                          Text(
-                            item['quantity'].toString(),
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle,
-                                color: Colors.black),
-                            onPressed: () {
-                              _updateQuantity(index, item['quantity'] + 1);
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  if (item['catatan'] != null && item['catatan'].isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        'Catatan: ${item['catatan']}',
-                        style: const TextStyle(
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey,
+                ),
+              );
+            },
+          ),
+        ),
+        if (pesanan.isNotEmpty)
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.5),
+                  spreadRadius: 1,
+                  blurRadius: 3,
+                  offset: const Offset(0, -2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Harga',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    Text(
+                      'Rp ${formatPrice(getTotalHarga())}',
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CheckoutPage(
+                            pesanan: pesanan,
+                            idPelanggan: widget.idPelanggan,
+                            totalHarga: getTotalHarga(),
+                          ),
                         ),
+                      ).then((_) => _loadKeranjang());
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D5EA2),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
                       ),
                     ),
-                ],
-              ),
+                    child: const Text(
+                      "Lanjut ke Pembayaran",
+                      style: TextStyle(color: Colors.white, fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
-        );
-      },
+      ],
     );
   }
 
@@ -313,95 +377,6 @@ Future<void> _removeItem(int index) async {
         ),
       ),
       body: _buildCartContent(),
-      bottomNavigationBar: pesanan.isEmpty || isLoading || isError
-          ? null
-          : Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Harga',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      Text(
-                        'Rp ${formatPrice(getTotalHarga())}',
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CheckoutPage(
-                              pesanan: pesanan,
-                              idPelanggan: widget.idPelanggan,
-                              totalHarga: getTotalHarga(),
-                            ),
-                          ),
-                        ).then((_) => _loadKeranjang());
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF2D5EA2),
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Lanjut ke Pembayaran",
-                        style: TextStyle(color: Colors.white, fontSize: 16),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget buildBottomNavigation(BuildContext context) {
-    return CurvedNavigationBar(
-      backgroundColor: Colors.white,
-      color: const Color(0xFF2D5EA2),
-      buttonBackgroundColor: const Color(0xFF2D5EA2),
-      height: 60,
-      animationDuration: const Duration(milliseconds: 300),
-      items: const <Widget>[
-        Icon(Icons.home, size: 30, color: Colors.white),
-        Icon(Icons.access_time, size: 30, color: Colors.white),
-        Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-      ],
-      onTap: (index) {
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );
-        } else if (index == 1) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
-          );
-        } else if (index == 2) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) =>
-                  KeranjangPage(idPelanggan: widget.idPelanggan),
-            ),
-          );
-        }
-      },
     );
   }
 }
