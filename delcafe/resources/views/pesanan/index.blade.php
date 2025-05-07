@@ -156,21 +156,22 @@
 </a>
 
                                                         
-                                                        @if (!in_array($p->status, ['selesai', 'dibatalkan']))
-                                                            <li>
-                                                                <form action="{{ route('pesanan.batalkan', $p->id) }}"
-                                                                    method="POST"
-                                                                    onsubmit="return confirm('Apakah Anda yakin ingin membatalkan pesanan ini?')">
-                                                                    @csrf
-                                                                    @method('PUT')
-                                                                    <button type="submit"
-                                                                        class="dropdown-item text-danger">
-                                                                        <i class="fas fa-times-circle me-2"></i> Batalkan
-                                                                        Pesanan
-                                                                    </button>
-                                                                </form>
-                                                            </li>
-                                                        @endif
+@if (!in_array($p->status, ['selesai', 'dibatalkan']))
+    <div class="dropdown-divider"></div>
+    <form action="{{ route('pesanan.status', ['id' => $p->id, 'status' => 'diproses']) }}" method="POST">
+        @csrf
+        <button class="dropdown-item" type="submit"><i class="fas fa-cogs"></i> Tandai Diproses</button>
+    </form>
+    <form action="{{ route('pesanan.status', ['id' => $p->id, 'status' => 'selesai']) }}" method="POST">
+        @csrf
+        <button class="dropdown-item" type="submit"><i class="fas fa-check-circle"></i> Tandai Selesai</button>
+    </form>
+    <form action="{{ route('pesanan.status', ['id' => $p->id, 'status' => 'dibatalkan']) }}" method="POST">
+        @csrf
+        <button class="dropdown-item text-danger" type="submit"><i class="fas fa-times-circle"></i> Batalkan</button>
+    </form>
+@endif
+
                                                     </ul>
                                                 </div>
                                             </td>

@@ -34,6 +34,8 @@ Route::middleware(['auth:admin'])->group(function () {
     Route::resource('pesanan', PesananController::class);
     Route::get('/pesanan/cetak-struk/{id}', [PesananController::class, 'cetakStruk'])->name('pesanan.cetak-struk');
     Route::put('/pesanan/batalkan/{id}', [PesananController::class, 'batalkanPesanan'])->name('pesanan.batalkan');
+    Route::post('/pesanan/{id}/status/{status}', [PesananController::class, 'ubahStatus'])->name('pesanan.status');
+
 
     // Rute Produk (Menu)
     Route::resource('produk', ProdukController::class);

@@ -125,4 +125,13 @@ class PesananController extends Controller
 
         return redirect()->back()->with('success', 'Pesanan berhasil dibatalkan.');
     }
+    public function ubahStatus($id, $status)
+{
+    $pesanan = Pemesanan::findOrFail($id);
+    $pesanan->status = strtolower($status);
+    $pesanan->save();
+
+    return redirect()->back()->with('success', 'Status pesanan berhasil diperbarui.');
+}
+
 }
