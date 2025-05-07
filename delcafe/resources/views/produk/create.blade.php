@@ -11,9 +11,6 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-white d-flex justify-content-between align-items-center">
                         <h5 class="mb-0">Form Tambah Produk</h5>
-                        <a href="{{ route('produk.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-1"></i> Kembali
-                        </a>
                     </div>
                     <div class="card-body">
                         <form action="{{ route('produk.store') }}" method="POST" enctype="multipart/form-data">
@@ -92,10 +89,11 @@
                                 </div>
                             </div>
 
-                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                                <button type="reset" class="btn btn-secondary me-md-2">Reset</button>
-                                <button type="submit" class="btn btn-primary">Simpan</button>
-                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" class="btn btn-primary">Simpan</button>
+                            <button type="reset" class="btn btn-warning">Reset</button>
+                            <a href="{{ route('stok.index') }}" class="btn btn-secondary">Kembali</a>
+                        </div>  
                         </form>
                     </div>
                 </div>
