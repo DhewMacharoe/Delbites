@@ -34,75 +34,60 @@ class MenuDetail extends StatefulWidget {
 class _MenuDetailState extends State<MenuDetail> {
   String? selectedSuhu;
   String? catatanTambahan;
-  List<Map<String, dynamic>> pesanan = [];
   double _userRating = 0;
 
   Future<void> addToCart() async {
-    try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/keranjang'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'id_menu': widget.menuId,
-          'nama_menu': widget.name,
-          'kategori': widget.kategori,
-          'suhu': selectedSuhu,
-          'jumlah': 1,
-          'harga': int.tryParse(widget.price) ?? 0,
-          'catatan': catatanTambahan ?? '',
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Item berhasil ditambahkan ke keranjang'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      } else {
-        _addToLocalCart();
-      }
-    } catch (e) {
-      _addToLocalCart();
-    }
-  }
-
-  void _addToLocalCart() {
-    try {
-      int index = pesanan.indexWhere((item) =>
-          item['id'] == widget.menuId &&
-          (widget.kategori == 'makanan' || item['suhu'] == selectedSuhu));
-      if (index != -1) {
-        pesanan[index]['quantity'] += 1;
-      } else {
-        pesanan.add({
-          'id': widget.menuId,
-          'name': widget.name,
-          'price': int.tryParse(widget.price) ?? 0,
-          'quantity': 1,
-          if (widget.kategori == 'minuman') 'suhu': selectedSuhu,
-          'catatan': catatanTambahan ?? '',
-        });
-      }
-
+  try {
+    // Validasi untuk minuman harus pilih suhu
+    if (widget.kategori == 'minuman' && selectedSuhu == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Item berhasil ditambahkan ke keranjang'),
-          backgroundColor: Colors.blue,
-        ),
-      );
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menambahkan ke keranjang: $e'),
+          content: Text('Harap pilih suhu untuk minuman'),
           backgroundColor: Colors.red,
         ),
       );
+      return;
     }
+
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/keranjang'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'id_menu': widget.menuId,
+        'id_pelanggan': 1, // Ganti dengan ID pelanggan yang sesuai
+        'nama_menu': widget.name,
+        'kategori': widget.kategori,
+        'suhu': selectedSuhu,
+        'jumlah': 1,
+        'harga': int.tryParse(widget.price) ?? 0,
+        'catatan': catatanTambahan ?? '',
+      }),
+    );
+
+    // Perbaikan pengecekan response
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      final responseData = json.decode(response.body);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(responseData['message'] ?? 'Item berhasil ditambahkan ke keranjang'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context);
+    } else {
+      final errorData = json.decode(response.body);
+      throw Exception(errorData['message'] ?? 'Gagal menambahkan ke keranjang');
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Gagal menambahkan ke keranjang: ${e.toString()}'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    // Tidak perlu pop context jika gagal
   }
+}
 
   Future<void> submitRating(double rating) async {
     try {

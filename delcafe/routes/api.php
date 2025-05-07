@@ -43,6 +43,8 @@ Route::get('/keranjang/{id}', [KeranjangController::class, 'show']);
 Route::post('/keranjang', [KeranjangController::class, 'store']);
 Route::put('/keranjang/{id}', [KeranjangController::class, 'update']);
 Route::delete('/keranjang/{id}', [KeranjangController::class, 'destroy']);
+Route::post('/keranjang/checkout/{id_pelanggan}', [KeranjangController::class, 'checkout']);
+Route::get('/keranjang/pelanggan/{id_pelanggan}', [KeranjangController::class, 'getByPelanggan']);
 
 Route::get('/detail-pemesanan', [DetailPemesananController::class, 'index']);
 Route::post('/detail-pemesanan', [DetailPemesananController::class, 'store']);

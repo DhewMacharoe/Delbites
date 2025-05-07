@@ -11,8 +11,15 @@ const String baseUrl = 'http://127.0.0.1:8000'; // Tambahkan definisi baseUrl
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> pesanan;
+  final int idPelanggan;
+  final int totalHarga;
 
-  const CheckoutPage({Key? key, required this.pesanan}) : super(key: key);
+  const CheckoutPage({
+    Key? key,
+    required this.pesanan,
+    required this.idPelanggan,
+    required this.totalHarga,
+  }) : super(key: key);
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
@@ -101,7 +108,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         throw Exception('Gagal ambil pelanggan');
       }
 
-// Cek jika body kosong
+    // Cek jika body kosong
       if (pelangganResponse.body.trim().isEmpty) {
         throw Exception('Respons dari server kosong.');
       }

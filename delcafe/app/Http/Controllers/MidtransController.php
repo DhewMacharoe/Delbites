@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pemesanan;
 use Illuminate\Http\Request;
 use Midtrans\Config;
 use Midtrans\Snap;
@@ -36,6 +37,26 @@ class MidtransController extends Controller
             'items.*.quantity' => 'required|numeric',
         ]);
 
+        // Buat entri pemesanan terlebih dahulu
+        $pemesanan = Pemesanan::create([
+            'id_pelanggan' => $request->id_pelanggan,
+            'admin_id' => null,
+            'total_harga' => $request->gross_amount,
+            'metode_pembayaran' => 'transfer',
+            'bukti_pembayaran' => null,
+            'status' => 'pembayaran',
+            'waktu_pemesanan' => now(),
+            'waktu_pengambilan' => null,
+        ]);
+
+        // Buat order ID berbasis id pemesanan
+        $orderId = 'ORDER-' . $pemesanan->id . '-' . time();
+
+        // Simpan order ID ke kolom bukti_pembayaran
+        $pemesanan->bukti_pembayaran = $orderId;
+        $pemesanan->save();
+
+        // Persiapkan parameter untuk Midtrans
         $params = [
             'transaction_details' => [
                 'order_id' => $request->order_id,
