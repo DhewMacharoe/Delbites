@@ -23,7 +23,7 @@ class DashboardController extends Controller
 
         // Pesanan terbaru (FIFO - First In First Out)
         $pesananTerbaru = Pemesanan::with(['pelanggan'])
-            ->where('status', 'menunggu')
+            ->whereIn('status', ['menunggu', 'pembayaran'])
             ->orderBy('created_at', 'asc')
             ->limit(5)
             ->get();

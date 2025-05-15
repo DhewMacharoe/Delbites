@@ -24,7 +24,6 @@ class PemesananController extends Controller
     {
         Log::info('Incoming request:', $request->all());
 
-
         $request->validate([
             'id_pelanggan' => 'required|exists:pelanggan,id',
             'admin_id' => 'nullable|integer',
@@ -55,9 +54,6 @@ class PemesananController extends Controller
                 'waktu_pengambilan' => $request->waktu_pengambilan,
             ]);
 
-            // ✅ Tambahkan log di sini
-            Log::info('DETAIL PEMESANAN MASUKAN:', $request->detail_pemesanan);
-
             foreach ($request->detail_pemesanan as $item) {
                 $pemesanan->detailPemesanan()->create([
                     'id_menu' => $item['id_menu'],
@@ -70,7 +66,7 @@ class PemesananController extends Controller
             }
 
             DB::commit();
-
+            Log::info('DETAIL PEMESANAN MASUKAN:', $request->detail_pemesanan);
             // Kirim notifikasi ke semua admin
             $admins = Admin::all();
             foreach ($admins as $admin) {
@@ -82,7 +78,6 @@ class PemesananController extends Controller
                 'message' => 'Pemesanan dan detail berhasil disimpan',
                 'data' => $pemesanan->load('detailPemesanan')
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Pemesanan gagal: ' . $e->getMessage());
@@ -91,9 +86,6 @@ class PemesananController extends Controller
                 'message' => 'Gagal menyimpan: ' . $e->getMessage()
             ], 500);
         }
-
-
-        Log::info('DETAIL PEMESANAN MASUKAN:', $request->detail_pemesanan);
     }
 
     // Tampilkan pesanan berdasarkan id
@@ -123,7 +115,11 @@ class PemesananController extends Controller
         ]);
 
         $pemesanan->update($request->only([
-            'total_harga', 'metode_pembayaran', 'status', 'waktu_pemesanan', 'waktu_pengambilan'
+            'total_harga',
+            'metode_pembayaran',
+            'status',
+            'waktu_pemesanan',
+            'waktu_pengambilan'
         ]));
 
         return response()->json([
