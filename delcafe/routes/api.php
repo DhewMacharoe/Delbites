@@ -11,88 +11,94 @@ use App\Http\Controllers\MidtransController;
 use App\Http\Controllers\DetailPemesananController;
 use App\Http\Controllers\LaporanController;
 
+// Menu routes
+Route::prefix('menu')->group(function () {
+    Route::get('/', [MenuController::class, 'index']);
+    Route::get('/top', [MenuController::class, 'topMenu']);
+    Route::get('/{id}', [MenuController::class, 'show']);
+    Route::post('/', [MenuController::class, 'store']);
+    Route::put('/{id}', [MenuController::class, 'update']);
+    Route::put('/{id}/rating-update', [MenuController::class, 'updateAverageRating']);
+    Route::delete('/{id}', [MenuController::class, 'destroy']);
+});
 
-// Menu
-Route::get('/menu', [MenuController::class, 'index']);
-Route::get('/menu/{id}', [MenuController::class, 'show']);
-Route::post('/menu', [MenuController::class, 'store']);
-Route::put('/menu/{id}', [MenuController::class, 'update']);
-Route::delete('/menu/{id}', [MenuController::class, 'destroy']);
-Route::get('/menu/top', [MenuController::class, 'topMenu']); // gunakan hanya ini
-// Route::post('/rating', [MenuController::class, 'storeRating']);
-// Route::post('/rating', [MenuController::class, 'beriRating']);
-Route::put('/menu/{id}/rating-update', [MenuController::class, 'updateAverageRating']);
+// Pelanggan routes
+Route::prefix('pelanggan')->group(function () {
+    Route::get('/', [PelangganController::class, 'index']);
+    Route::get('/by-telepon', [PelangganController::class, 'getByTelepon']);
+    Route::get('/by-device', [PelangganController::class, 'getByDevice']);
+    Route::get('/{id}', [PelangganController::class, 'show']);
+    Route::post('/', [PelangganController::class, 'store']);
+    Route::put('/{id}', [PelangganController::class, 'update']);
+    Route::delete('/{id}', [PelangganController::class, 'destroy']);
+});
 
+// Pemesanan routes
+Route::prefix('pemesanan')->group(function () {
+    Route::get('/', [PemesananController::class, 'index']);
+    Route::get('/pelanggan/{id}', [PemesananController::class, 'getByPelanggan']);
+    Route::get('/cek-baru', [PemesananController::class, 'cekPesananBaru']);  // polling baru
+    Route::get('/{id}', [PemesananController::class, 'show']);
+    Route::post('/', [PemesananController::class, 'store']);
+    Route::put('/{id}', [PemesananController::class, 'update']);
+    Route::delete('/{id}', [PemesananController::class, 'destroy']);
+});
 
+// Admin routes
+Route::prefix('admin')->group(function () {
+    Route::get('/', [AdminController::class, 'index']);
+    Route::get('/{id}', [AdminController::class, 'show']);
+    Route::post('/', [AdminController::class, 'store']);
+    Route::put('/{id}', [AdminController::class, 'update']);
+    Route::delete('/{id}', [AdminController::class, 'destroy']);
+});
 
-// Pelanggan
-Route::get('/pelanggan', [PelangganController::class, 'index']);
-Route::get('/pelanggan/{id}', [PelangganController::class, 'show']);
-Route::post('/pelanggan', [PelangganController::class, 'store']);
-Route::put('/pelanggan/{id}', [PelangganController::class, 'update']);
-Route::delete('/pelanggan/{id}', [PelangganController::class, 'destroy']);
+// Keranjang routes
+Route::prefix('keranjang')->group(function () {
+    Route::get('/', [KeranjangController::class, 'index']);
+    Route::get('/pelanggan/{id_pelanggan}', [KeranjangController::class, 'getByPelanggan']);
+    Route::get('/{id}', [KeranjangController::class, 'show']);
+    Route::post('/', [KeranjangController::class, 'store']);
+    Route::put('/{id}', [KeranjangController::class, 'update']);
+    Route::post('/checkout/{id_pelanggan}', [KeranjangController::class, 'checkout']);
+    Route::delete('/{id}', [KeranjangController::class, 'destroy']);
+    Route::delete('/pelanggan/{id_pelanggan}', [KeranjangController::class, 'clearCart']);
+});
 
-Route::get('/pelanggan/by-telepon', [PelangganController::class, 'getByTelepon']);
-Route::get('/pelanggan/by-device', [PelangganController::class, 'getByDevice']);
+// Laporan routes
+Route::prefix('laporan')->group(function () {
+    Route::get('/', [LaporanController::class, 'index']);
+    Route::get('/{id}', [LaporanController::class, 'show']);
+    Route::post('/', [LaporanController::class, 'store']);
+    Route::put('/{id}', [LaporanController::class, 'update']);
+    Route::delete('/{id}', [LaporanController::class, 'destroy']);
+});
 
-// Pemesanan
-Route::get('/pemesanan', [PemesananController::class, 'index']);
-Route::get('/pemesanan/{id}', [PemesananController::class, 'show']);
-Route::post('/pemesanan', [PemesananController::class, 'store']);
-Route::put('/pemesanan/{id}', [PemesananController::class, 'update']);
-Route::delete('/pemesanan/{id}', [PemesananController::class, 'destroy']);
-Route::get('/pemesanan/pelanggan/{id}', [PemesananController::class, 'getByPelanggan']);
-// Route::put('/detail-pemesanan/{id}/rating', [PemesananController::class, 'beriRating']);
-// Route::post('/pemesanan/rating/{id}', [PemesananController::class, 'beriRating']);
-// Route::put('/pemesanan/rating/{id}', [PemesananController::class, 'updateRating']);
+// Detail Pemesanan routes
+Route::prefix('detail-pemesanan')->group(function () {
+    Route::get('/', [DetailPemesananController::class, 'index']);
+    Route::get('/{id}', [DetailPemesananController::class, 'show']);
+    Route::post('/', [DetailPemesananController::class, 'store']);
+    Route::put('/{id}', [DetailPemesananController::class, 'update']);
+    Route::put('/{id}/rating', [DetailPemesananController::class, 'updateRating']);
+    Route::delete('/{id}', [DetailPemesananController::class, 'destroy']);
+});
 
+// Auth routes for pelanggan
+Route::prefix('auth')->group(function () {
+    Route::post('/pelanggan', [PelangganController::class, 'loginAtauRegister']);
+    Route::post('/pelanggan/manual', [PelangganController::class, 'loginManual']);
+});
 
-
-// Admin
-Route::get('/admin', [AdminController::class, 'index']);
-Route::get('/admin/{id}', [AdminController::class, 'show']);
-Route::post('/admin', [AdminController::class, 'store']);
-Route::put('/admin/{id}', [AdminController::class, 'update']);
-Route::delete('/admin/{id}', [AdminController::class, 'destroy']);
-
-// Keranjang
-Route::get('/keranjang', [KeranjangController::class, 'index']);
-Route::get('/keranjang/{id}', [KeranjangController::class, 'show']);
-Route::post('/keranjang', [KeranjangController::class, 'store']);
-Route::put('/keranjang/{id}', [KeranjangController::class, 'update']);
-Route::delete('/keranjang/{id}', [KeranjangController::class, 'destroy']);
-Route::post('/keranjang/checkout/{id_pelanggan}', [KeranjangController::class, 'checkout']);
-Route::get('/keranjang/pelanggan/{id_pelanggan}', [KeranjangController::class, 'getByPelanggan']);
-Route::delete('/keranjang/pelanggan/{id_pelanggan}', [KeranjangController::class, 'clearCart']);
-
-// Laporan
-Route::get('/laporan', [LaporanController::class, 'index']);
-Route::get('/laporan/{id}', [LaporanController::class, 'show']);
-Route::post('/laporan', [LaporanController::class, 'store']);
-Route::put('/laporan/{id}', [LaporanController::class, 'update']);
-Route::delete('/laporan/{id}', [LaporanController::class, 'destroy']);
-
-// Detail Pemesanan
-Route::get('/detail-pemesanan', [DetailPemesananController::class, 'index']);
-Route::post('/detail-pemesanan', [DetailPemesananController::class, 'store']);
-Route::get('/detail-pemesanan/{id}', [DetailPemesananController::class, 'show']);
-Route::put('/detail-pemesanan/{id}', [DetailPemesananController::class, 'update']);
-Route::delete('/detail-pemesanan/{id}', [DetailPemesananController::class, 'destroy']);
-Route::put('/detail-pemesanan/{id}/rating', [DetailPemesananController::class, 'updateRating']);
-
-
-
-// Auth Pelanggan
-Route::post('/auth/pelanggan', [PelangganController::class, 'loginAtauRegister']);
-Route::post('/auth/pelanggan/manual', [PelangganController::class, 'loginManual']);
-
-// Middleware JWT
+// Middleware JWT group
 Route::middleware('jwt.auth')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 });
 
-// Midtrans
-Route::post('/midtrans/create-transaction', [MidtransController::class, 'createTransaction']);
-Route::get('/midtrans/status/{orderId}', [MidtransController::class, 'checkStatus']);
-Route::post('/midtrans/notification', [MidtransController::class, 'handleNotification']);
+// Midtrans routes
+Route::prefix('midtrans')->group(function () {
+    Route::post('/create-transaction', [MidtransController::class, 'createTransaction']);
+    Route::get('/status/{orderId}', [MidtransController::class, 'checkStatus']);
+    Route::post('/notification', [MidtransController::class, 'handleNotification']);
+});

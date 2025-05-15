@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,6 +67,7 @@
 
     @yield('styles')
 </head>
+
 <body>
     <div class="container-fluid">
         <div class="row">
@@ -79,32 +81,38 @@
 
                     <ul class="nav flex-column">
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">
+                            <a class="nav-link {{ request()->is('dashboard') ? 'active' : '' }}"
+                                href="{{ route('dashboard') }}">
                                 <i class="fas fa-tachometer-alt"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('pesanan*') ? 'active' : '' }}" href="{{ route('pesanan.index') }}">
+                            <a class="nav-link {{ request()->is('pesanan*') ? 'active' : '' }}"
+                                href="{{ route('pesanan.index') }}">
                                 <i class="fas fa-shopping-cart"></i> Pesanan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}" href="{{ route('produk.index') }}">
+                            <a class="nav-link {{ request()->is('produk*') ? 'active' : '' }}"
+                                href="{{ route('produk.index') }}">
                                 <i class="fas fa-box"></i> Menu
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('pelanggan*') ? 'active' : '' }}" href="{{ route('pelanggan.index') }}">
+                            <a class="nav-link {{ request()->is('pelanggan*') ? 'active' : '' }}"
+                                href="{{ route('pelanggan.index') }}">
                                 <i class="fas fa-users"></i> Pelanggan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}" href="{{ route('reports.index') }}">
+                            <a class="nav-link {{ request()->is('reports*') ? 'active' : '' }}"
+                                href="{{ route('reports.index') }}">
                                 <i class="fas fa-chart-bar"></i> Laporan
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {{ request()->is('stok*') ? 'active' : '' }}" href="{{ route('stok.index') }}">
+                            <a class="nav-link {{ request()->is('stok*') ? 'active' : '' }}"
+                                href="{{ route('stok.index') }}">
                                 <i class="fas fa-boxes"></i> Stok
                             </a>
                         </li>
@@ -123,7 +131,9 @@
                 <!-- Top Navbar -->
                 <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom mb-4">
                     <div class="container-fluid">
-                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                        <button class="navbar-toggler d-md-none" type="button" data-bs-toggle="collapse"
+                            data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false"
+                            aria-label="Toggle navigation">
                             <span class="navbar-toggler-icon"></span>
                         </button>
 
@@ -132,28 +142,37 @@
                         <div class="d-flex align-items-center">
                             <!-- Notification Bell -->
                             <div class="me-3">
-                                <a class="nav-link position-relative" href="#">
+                                <a class="nav-link position-relative" href="{{ route('notifikasi.index') }}">
                                     <i class="fas fa-bell"></i>
-                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                                        3
+                                    <span id="notificationCount"
+                                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="display:none;">
+                                        0
                                     </span>
                                 </a>
                             </div>
 
                             <!-- User Dropdown -->
                             <div class="dropdown p-2">
-                                <a href="#" class="d-flex align-items-center text-decoration-none" id="dropdownUserDetails" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}" alt="User Image" class="rounded-circle me-2" width="40" height="40">
+                                <a href="#" class="d-flex align-items-center text-decoration-none"
+                                    id="dropdownUserDetails" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}"
+                                        alt="User Image" class="rounded-circle me-2" width="40" height="40">
                                 </a>
-                                <ul class="dropdown-menu dropdown-menu-end text-center shadow p-3" aria-labelledby="dropdownUserDetails" style="width: 250px;">
-                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}" alt="User Image" class="rounded-circle mx-auto d-block mb-2" width="60" height="60">
+                                <ul class="dropdown-menu dropdown-menu-end text-center shadow p-3"
+                                    aria-labelledby="dropdownUserDetails" style="width: 250px;">
+                                    <img src="{{ auth()->user()->foto ? asset('storage/' . auth()->user()->foto) : asset('default.png') }}"
+                                        alt="User Image" class="rounded-circle mx-auto d-block mb-2" width="60"
+                                        height="60">
                                     <strong>{{ auth()->user()->name }}</strong>
 
                                     <div class="d-flex justify-content-between mt-3">
-                                        <a href="{{ route('profil.index') }}" class="btn btn-outline-primary btn-sm me-1 flex-fill">Profile</a>
+                                        <a href="{{ route('profil.index') }}"
+                                            class="btn btn-outline-primary btn-sm me-1 flex-fill">Profile</a>
                                         <form method="POST" action="{{ route('logout') }}" class="ms-1 flex-fill">
                                             @csrf
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign out</button>
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100">Sign
+                                                out</button>
                                         </form>
                                     </div>
                                 </ul>
@@ -193,4 +212,5 @@
 
     @yield('scripts')
 </body>
+
 </html>

@@ -3,13 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PesananController; 
+use App\Http\Controllers\PesananController;
 use App\Http\Controllers\ProdukController;
 use App\Http\Controllers\Api\PelangganController;
 use App\Http\Controllers\PelangganWebController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\StokController;
-use App\Http\Controllers\ProfilController; // <-- Tambahkan ini
+use App\Http\Controllers\ProfilController;
+use App\Http\Controllers\NotifikasiController;
+use App\Events\NotifikasiEvent;
+use App\Models\Notifikasi;
 
 /*
 |--------------------------------------------------------------------------
@@ -58,7 +61,28 @@ Route::middleware(['auth:admin'])->group(function () {
         Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
         Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
     });
-    
+
     Route::get('/pelanggan/by-telepon', [PelangganController::class, 'getByTelepon']);
 
+    Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+
+    Route::post('/kirim-notifikasi', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'judul' => 'required|string',
+            'pesan' => 'required|string',
+        ]);
+
+        $notifikasi = Notifikasi::create([
+            'judul' => $request->judul,
+            'pesan' => $request->pesan,
+        ]);
+
+        broadcast(new NotifikasiEvent($notifikasi))->toOthers();
+
+        return response()->json(['success' => true]);
+    });
+    Route::get('/test-notifikasi', function () {
+        broadcast(new NotifikasiEvent('Pesanan baru telah masuk!'))->toOthers();
+        return 'Notifikasi terkirim';
+    });
 });
