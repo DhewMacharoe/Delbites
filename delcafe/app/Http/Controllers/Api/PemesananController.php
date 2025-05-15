@@ -19,6 +19,7 @@ class PemesananController extends Controller
     {
         Log::info('Incoming request:', $request->all());
 
+
         $request->validate([
             'id_pelanggan' => 'required|exists:pelanggan,id',
             'admin_id' => 'nullable|integer',
@@ -49,13 +50,17 @@ class PemesananController extends Controller
                 'waktu_pemesanan' => now(),
                 'waktu_pengambilan' => $request->waktu_pengambilan,
             ]);
+
+            // ✅ Tambahkan log di sini
+            Log::info('DETAIL PEMESANAN MASUKAN:', $request->detail_pemesanan);
+
             foreach ($request->detail_pemesanan as $item) {
                 $pemesanan->detailPemesanan()->create([
                     'id_menu' => $item['id_menu'],
                     'jumlah' => $item['jumlah'],
                     'harga_satuan' => $item['harga_satuan'],
                     'subtotal' => $item['subtotal'],
-                    'catatan' => $item['catatan'] ?? null, // ✅ tambahkan ini
+                    'catatan' => $item['catatan'] ?? null,
                     'suhu' => $item['suhu'] ?? null,
                 ]);
             }
@@ -74,6 +79,9 @@ class PemesananController extends Controller
                 'message' => 'Gagal menyimpan: ' . $e->getMessage()
             ], 500);
         }
+
+
+        Log::info('DETAIL PEMESANAN MASUKAN:', $request->detail_pemesanan);
     }
 
     public function show(string $id)

@@ -23,77 +23,56 @@ class MidtransController extends Controller
     }
 
     public function createTransaction(Request $request)
-    {
-        $request->validate([
-            'order_id' => 'required|string',
-            'gross_amount' => 'required|numeric',
-            'first_name' => 'required|string',
-            'last_name' => 'string',
-            'email' => 'required|email',
-            'items' => 'required|array',
-            'items.*.id' => 'required|string',
-            'items.*.name' => 'required|string',
-            'items.*.price' => 'required|numeric',
-            'items.*.quantity' => 'required|numeric',
+{
+    $request->validate([
+        'order_id' => 'required|string',
+        'gross_amount' => 'required|numeric',
+        'first_name' => 'required|string',
+        'last_name' => 'string',
+        'email' => 'required|email',
+        'items' => 'required|array',
+        'items.*.id' => 'required|string',
+        'items.*.name' => 'required|string',
+        'items.*.price' => 'required|numeric',
+        'items.*.quantity' => 'required|numeric',
+    ]);
+
+    $params = [
+        'transaction_details' => [
+            'order_id' => $request->order_id,
+            'gross_amount' => $request->gross_amount,
+        ],
+        'customer_details' => [
+            'first_name' => $request->first_name,
+            'last_name' => $request->last_name,
+            'email' => $request->email,
+        ],
+        'item_details' => $request->items,
+        'expiry' => [
+            'start_time' => date("Y-m-d H:i:s O"),
+            'unit' => 'minute',
+            'duration' => 15,
+        ],
+    ];
+
+    try {
+        $snapToken = Snap::getSnapToken($params);
+        $redirectUrl = Snap::getSnapUrl($params);
+
+        return response()->json([
+            'status' => 'success',
+            'snap_token' => $snapToken,
+            'redirect_url' => $redirectUrl,
+            'order_id' => $request->order_id
         ]);
-
-        // Buat entri pemesanan terlebih dahulu
-        $pemesanan = Pemesanan::create([
-            'id_pelanggan' => $request->id_pelanggan,
-            'admin_id' => null,
-            'total_harga' => $request->gross_amount,
-            'metode_pembayaran' => 'transfer',
-            'bukti_pembayaran' => null,
-            'status' => 'pembayaran',
-            'waktu_pemesanan' => now(),
-            'waktu_pengambilan' => null,
-        ]);
-
-        // Buat order ID berbasis id pemesanan
-        $orderId = 'ORDER-' . $pemesanan->id . '-' . time();
-
-        // Simpan order ID ke kolom bukti_pembayaran
-        $pemesanan->bukti_pembayaran = $orderId;
-        $pemesanan->save();
-
-        // Persiapkan parameter untuk Midtrans
-        $params = [
-            // 'enabled_payments' => ['echannel', 'dana'],
-            'transaction_details' => [
-                'order_id' => $request->order_id,
-                'gross_amount' => $request->gross_amount,
-            ],
-            'customer_details' => [
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-            ],
-            'item_details' => $request->items,
-            'expiry' => [
-                'start_time' => date("Y-m-d H:i:s O"), // waktu sekarang
-                'unit' => 'minute',
-                'duration' => 15,
-            ],
-
-        ];
-
-        try {
-            // Get Snap Payment Page URL
-            $snapToken = Snap::getSnapToken($params);
-            $redirectUrl = Snap::getSnapUrl($params);
-
-            return response()->json([
-                'status' => 'success',
-                'snap_token' => $snapToken,
-                'redirect_url' => $redirectUrl,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => $e->getMessage(),
-            ], 500);
-        }
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+        ], 500);
     }
+}
+
 
     public function checkStatus($orderId)
     {

@@ -30,7 +30,7 @@ class CheckoutPage extends StatefulWidget {
 List<Map<String, dynamic>> buildDetailPemesanan(
     List<Map<String, dynamic>> pesanan) {
   return pesanan.map((item) {
-    final int harga = (item['price'] is int)
+    final int harga = item['price'] is int
         ? item['price']
         : int.tryParse(item['price']
                 .toString()
@@ -38,17 +38,17 @@ List<Map<String, dynamic>> buildDetailPemesanan(
                 .replaceAll('.', '')) ??
             0;
 
-    final int qty = (item['quantity'] is int)
+    final int jumlah = item['quantity'] is int
         ? item['quantity']
         : int.tryParse(item['quantity'].toString()) ?? 0;
 
     return {
       'id_menu': item['id_menu'],
-      'jumlah': qty,
+      'jumlah': jumlah,
       'harga_satuan': harga,
-      'subtotal': harga * qty,
-      'catatan': item['catatan'] ?? '',
+      'subtotal': harga * jumlah,
       'suhu': item['suhu'] ?? '',
+      'catatan': item['catatan'] ?? '',
     };
   }).toList();
 }
@@ -117,29 +117,76 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return 'Rp 0';
   }
 
-  Future<void> processPayment() async {
-    final nama = nameController.text.trim();
-    final telepon = phoneController.text.trim();
-    final email = emailController.text.trim();
+Future<void> processPayment() async {
+  final nama = nameController.text.trim();
+  final telepon = phoneController.text.trim();
+  final email = emailController.text.trim();
 
-    if (nama.isEmpty || telepon.isEmpty || email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Lengkapi semua data pelanggan.')),
+  if (nama.isEmpty || telepon.isEmpty || email.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Lengkapi semua data pelanggan.')),
+    );
+    return;
+  }
+
+  setState(() => isLoading = true);
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    // ✅ Cek jika masih ada transaksi aktif, langsung pakai itu
+    final existingOrderId = prefs.getString('midtrans_order_id');
+    final existingRedirectUrl = prefs.getString('midtrans_redirect_url');
+    if (existingOrderId != null && existingRedirectUrl != null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => MidtransPaymentPage(
+            redirectUrl: existingRedirectUrl,
+            orderId: existingOrderId,
+            pesanan: widget.pesanan,
+            idPelanggan: widget.idPelanggan,
+            totalHarga: getTotalHarga(),
+          ),
+        ),
       );
       return;
     }
 
-    setState(() => isLoading = true);
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
+      // Bersihkan transaksi Midtrans sebelumnya agar tidak terjadi tumpang tindih
+      await prefs.remove('midtrans_order_id');
+      await prefs.remove('midtrans_redirect_url');
 
-      // 1. Panggil API pelanggan
       final int idPelanggan = await getOrCreatePelangganId(nama, telepon);
       final grossAmount = getTotalHarga();
-      // 2. Cek apakah sudah ada transaksi Midtrans yang aktif
-      final existingOrderId = prefs.getString('midtrans_order_id');
-      final existingRedirectUrl = prefs.getString('midtrans_redirect_url');
+
+      // Kirim pesanan ke backend terlebih dahulu
+      final pemesananResponse = await http.post(
+        Uri.parse('$baseUrl/api/pemesanan'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: jsonEncode({
+          'id_pelanggan': idPelanggan,
+          'admin_id': null,
+          'total_harga': grossAmount,
+          'metode_pembayaran': 'transfer bank',
+          'status': 'pembayaran',
+          'waktu_pengambilan': DateTime.now().toIso8601String(),
+          'detail_pemesanan': buildDetailPemesanan(widget.pesanan),
+        }),
+      );
+
+      if (pemesananResponse.statusCode != 201) {
+        throw Exception('Gagal menyimpan pesanan: ${pemesananResponse.body}');
+      }
+
+      final pemesananData = jsonDecode(pemesananResponse.body);
+      final int idPemesanan = pemesananData['data']['id'];
+      final orderId =
+          'ORDER-$idPemesanan-${DateTime.now().millisecondsSinceEpoch}';
 
       if (existingOrderId != null && existingRedirectUrl != null) {
         Navigator.push(
@@ -157,9 +204,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
 
-      // 3. Persiapkan data pesanan
-      final orderId = 'ORDER-${DateTime.now().millisecondsSinceEpoch}';
-
       final items = widget.pesanan
           .map((item) => {
                 'id': item['id_menu'].toString(),
@@ -169,7 +213,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
               })
           .toList();
 
-      // 4. Kirim ke API Midtrans
       final response = await http.post(
         Uri.parse('$baseUrl/api/midtrans/create-transaction'),
         headers: {
@@ -195,29 +238,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
           final String redirectUrl = result['redirect_url'] ?? '';
           final String orderId = result['order_id'] ?? '';
 
-          // ✅ Simpan data transaksi ke local storage
           await prefs.setString('midtrans_order_id', orderId);
           await prefs.setString('midtrans_redirect_url', redirectUrl);
 
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => MidtransPaymentPage(
-                redirectUrl: redirectUrl,
-                orderId: orderId,
-                pesanan: widget.pesanan,
-                idPelanggan: idPelanggan,
-                totalHarga: grossAmount,
+          if (existingOrderId != null && existingRedirectUrl != null) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MidtransPaymentPage(
+                  redirectUrl: existingRedirectUrl,
+                  orderId: existingOrderId,
+                  pesanan: widget.pesanan,
+                  idPelanggan: idPelanggan,
+                  totalHarga: grossAmount,
+                ),
               ),
-            ),
-          );
+            );
+            return;
+          }
         } else {
           throw Exception('Gagal membuat transaksi: ${result['message']}');
         }
       } else {
         print("Respons bukan JSON:\n${response.body}");
-        throw Exception(
-            'Server mengembalikan HTML atau format tidak dikenali.');
+        throw Exception('Server mengembalikan format tidak dikenali.');
       }
     } catch (e) {
       print("Payment error: $e");

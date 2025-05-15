@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:Delbites/home.dart';
 
 import 'package:Delbites/riwayat_pesanan.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,111 +39,90 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              isLoading = false;
-            });
+        NavigationDelegate(onPageStarted: (String url) {
+          setState(() {
+            isLoading = true;
+          });
+        }, onPageFinished: (String url) {
+          setState(() {
+            isLoading = false;
+          });
 
-            // Deteksi status pembayaran sukses atau gagal
-            if (url.contains('transaction_status=settlement') ||
-                url.contains('transaction_status=capture') ||
-                url.contains('status_code=200')) {
-              _handlePaymentSuccess();
-            } else if (url.contains('transaction_status=deny') ||
-                url.contains('transaction_status=cancel') ||
-                url.contains('transaction_status=expire') ||
-                url.contains('status_code=202')) {
-              _handlePaymentFailure();
-            }
-          },
-        ),
+          // Cek jika transaksi selesai berdasarkan URL Midtrans
+          if (url.contains('transaction_status=settlement') ||
+              url.contains('transaction_status=capture') ||
+              url.contains('status_code=200')) {
+            _handlePaymentSuccess();
+          } else if (url.contains('transaction_status=deny') ||
+              url.contains('transaction_status=cancel') ||
+              url.contains('transaction_status=expire') ||
+              url.contains('status_code=202')) {
+            _handlePaymentFailure();
+          } else if (url.contains('example.com')) {
+            // Gantikan link ini dengan navigasi manual
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const HomePage()),
+              (route) => false,
+            );
+          }
+
+          // Cegah redirect ke example.com
+          if (url.startsWith('http://example.com') ||
+              url.contains('order_id=')) {
+            _handlePaymentSuccess(); // Asumsikan sukses, atau panggil check status manual
+          }
+        }),
       )
       ..loadRequest(Uri.parse(widget.redirectUrl));
   }
 
   Future<void> _handlePaymentSuccess() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.remove('midtrans_order_id');
-    prefs.remove('midtrans_redirect_url');
+
+    // Bersihkan data midtrans
+    await prefs.remove('midtrans_order_id');
+    await prefs.remove('midtrans_redirect_url');
 
     try {
-      // Kirim pemesanan ke backend Laravel
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/pemesanan'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-        body: jsonEncode({
-          'id_pelanggan': widget.idPelanggan,
-          'total_harga': widget.totalHarga,
-          'metode_pembayaran': 'transfer',
-          'status': 'pembayaran',
-          'detail_pemesanan': widget.pesanan.map((item) {
-            final harga = item['price'] is int
-                ? item['price']
-                : int.tryParse(item['price']
-                        .toString()
-                        .replaceAll('Rp ', '')
-                        .replaceAll('.', '')) ??
-                    0;
-            final qty = item['quantity'] is int
-                ? item['quantity']
-                : int.tryParse(item['quantity'].toString()) ?? 0;
-            return {
-              'id_menu': item['id_menu'],
-              'jumlah': qty,
-              'harga_satuan': harga,
-              'subtotal': harga * qty,
-            };
-          }).toList(),
-        }),
+      // Hapus keranjang
+      await http.delete(
+        Uri.parse('$baseUrl/api/keranjang/pelanggan/${widget.idPelanggan}'),
+        headers: {'Content-Type': 'application/json'},
       );
-
-      if (response.statusCode == 201) {
-        // Hapus isi keranjang
-        final clearCartResponse = await http.delete(
-          Uri.parse('$baseUrl/api/keranjang/pelanggan/${widget.idPelanggan}'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        );
-
-        print("CLEAR CART STATUS: ${clearCartResponse.statusCode}");
-        print("CLEAR CART RESPONSE: ${clearCartResponse.body}");
-
-        // Redirect ke riwayat pesanan
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const RiwayatPesananPage()),
-          (route) => false,
-        );
-      } else {
-        throw Exception('Gagal menyimpan pesanan: ${response.body}');
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Gagal menyimpan: $e')));
+    } catch (_) {
+      // Abaikan error keranjang
     }
+
+    // Kembali ke Home
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomePage(),
+        settings: const RouteSettings(arguments: 0), // ke tab Home
+      ),
+      (route) => false,
+    );
   }
 
   Future<void> _handlePaymentFailure() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.remove('midtrans_order_id');
-    prefs.remove('midtrans_redirect_url');
+
+    await prefs.remove('midtrans_order_id');
+    await prefs.remove('midtrans_redirect_url');
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pembayaran gagal atau dibatalkan.')),
+      const SnackBar(content: Text('Pembayaran dibatalkan atau gagal')),
     );
 
-    Navigator.pop(context); // Kembali ke halaman sebelumnya (checkout)
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const HomePage(),
+        settings: const RouteSettings(arguments: 0),
+      ),
+      (route) => false,
+    );
   }
 
   @override
