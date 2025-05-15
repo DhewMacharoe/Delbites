@@ -127,7 +127,17 @@
                                                             <i class="fas fa-check-circle"></i> Terima
                                                         </button>
                                                     </form>
+                                                @elseif ($pesanan->status === 'pembayaran')
+                                                    <form
+                                                        action="{{ route('pesanan.status', ['id' => $pesanan->id, 'status' => 'diproses']) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-sm btn-success">
+                                                            <i class="fas fa-check-circle"></i> Terima
+                                                        </button>
+                                                    </form>
                                                 @endif
+
                                             </td>
                                         </tr>
                                     @empty
