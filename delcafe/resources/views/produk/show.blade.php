@@ -14,10 +14,10 @@
                     @if ($produk->gambar)
                         <img src="{{ asset('storage/' . $produk->gambar) }}" alt="{{ $produk->nama_menu }}"
                              class="img-fluid rounded">
-                        <div class="mt-2">
+                        {{-- <div class="mt-2">
                             <small class="text-muted">Path di database: {{ $produk->gambar }}</small><br>
                             <small class="text-muted">URL lengkap: {{ asset('storage/' . $produk->gambar) }}</small>
-                        </div>
+                        </div> --}}
                     @else
                         <div class="bg-light rounded d-flex justify-content-center align-items-center" style="height: 200px;">
                             <span class="text-muted">Tidak ada gambar</span>
