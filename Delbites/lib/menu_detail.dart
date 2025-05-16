@@ -4,6 +4,7 @@ import 'package:Delbites/suhu_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String baseUrl = 'http://127.0.0.1:8000';
@@ -36,6 +37,16 @@ class _MenuDetailState extends State<MenuDetail> {
   String? selectedSuhu;
   String? catatanTambahan;
   double _userRating = 0;
+  final currencyFormatter = NumberFormat.decimalPattern('id');
+
+  int getFinalPrice() {
+    int basePrice = int.tryParse(widget.price) ?? 0;
+    if (widget.kategori == 'minuman' && selectedSuhu == 'dingin') {
+      return basePrice + 2000;
+    }
+    return basePrice;
+  }
+
   Future<void> addToCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -48,8 +59,6 @@ class _MenuDetailState extends State<MenuDetail> {
         return;
       }
 
-      print("DEBUG - id_pelanggan = $idPelanggan");
-
       final body = jsonEncode({
         'id_menu': widget.menuId,
         'id_pelanggan': idPelanggan,
@@ -57,18 +66,16 @@ class _MenuDetailState extends State<MenuDetail> {
         'kategori': widget.kategori,
         'suhu': selectedSuhu,
         'jumlah': 1,
-        'harga': int.tryParse(widget.price) ?? 0,
+        'harga': getFinalPrice(),
         'catatan': catatanTambahan ?? '',
       });
 
-      print("DEBUG - body = $body");
-
       final response = await http.post(
-        Uri.parse('$baseUrl/api/keranjang'), // Gunakan baseUrl yang konsisten
+        Uri.parse('$baseUrl/api/keranjang'),
         headers: {'Content-Type': 'application/json'},
         body: body,
       );
-      // Perbaikan pengecekan response
+
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final responseData = json.decode(response.body);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -81,19 +88,15 @@ class _MenuDetailState extends State<MenuDetail> {
         Navigator.pop(context);
       } else {
         final errorData = json.decode(response.body);
-        print("GAGAL: ${response.statusCode} ${response.body}");
         throw Exception(
             errorData['message'] ?? 'Gagal menambahkan ke keranjang');
       }
     } catch (e) {
-      // Jika error mengandung "validasi gagal" → reset id_pelanggan dan buka pop-up
       final errorMsg = e.toString();
       if (errorMsg.toLowerCase().contains('validasi') ||
           errorMsg.toLowerCase().contains('pelanggan')) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('id_pelanggan'); // reset id yang tidak valid
-
-        // Tampilkan dialog pengisian data pelanggan
+        await prefs.remove('id_pelanggan');
         _showPelangganDialog();
       }
 
@@ -123,24 +126,18 @@ class _MenuDetailState extends State<MenuDetail> {
               children: [
                 TextFormField(
                   decoration: const InputDecoration(labelText: "Nama Lengkap"),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nama wajib diisi';
-                    }
-                    return null;
-                  },
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? 'Nama wajib diisi'
+                      : null,
                   onChanged: (value) => nama = value.trim(),
                 ),
                 TextFormField(
                   decoration:
                       const InputDecoration(labelText: "Nomor WhatsApp"),
                   keyboardType: TextInputType.phone,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Nomor HP wajib diisi';
-                    }
-                    return null;
-                  },
+                  validator: (value) => (value == null || value.trim().isEmpty)
+                      ? 'Nomor HP wajib diisi'
+                      : null,
                   onChanged: (value) => nomor = value.trim(),
                 ),
               ],
@@ -148,16 +145,14 @@ class _MenuDetailState extends State<MenuDetail> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Batal")),
             ElevatedButton(
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
                   try {
                     final prefs = await SharedPreferences.getInstance();
                     final deviceId = prefs.getString('device_id') ?? '';
-
                     final response = await http.post(
                       Uri.parse('$baseUrl/api/pelanggan'),
                       headers: {'Content-Type': 'application/json'},
@@ -167,7 +162,6 @@ class _MenuDetailState extends State<MenuDetail> {
                         'device_id': deviceId,
                       }),
                     );
-
                     if (response.statusCode == 200 ||
                         response.statusCode == 201) {
                       final data = jsonDecode(response.body);
@@ -176,7 +170,7 @@ class _MenuDetailState extends State<MenuDetail> {
                       await prefs.setString(
                           'telepon_pelanggan', data['telepon'] ?? '');
                       Navigator.pop(context);
-                      addToCart(); // retry
+                      addToCart();
                     } else {
                       throw Exception('Gagal menyimpan pelanggan');
                     }
@@ -195,7 +189,6 @@ class _MenuDetailState extends State<MenuDetail> {
     );
   }
 
-  // Fungsi untuk menampilkan dialog catatan tambahan
   void _showCatatanDialog(BuildContext context) {
     final _catatanController = TextEditingController();
 
@@ -207,20 +200,16 @@ class _MenuDetailState extends State<MenuDetail> {
           content: TextField(
             controller: _catatanController,
             decoration: const InputDecoration(
-              hintText: 'Contoh: Kurangi gula, tanpa es...',
-            ),
+                hintText: 'Contoh: Kurangi gula, tanpa es...'),
             maxLines: 3,
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Batal')),
             ElevatedButton(
               onPressed: () {
-                setState(() {
-                  catatanTambahan = _catatanController.text;
-                });
+                setState(() => catatanTambahan = _catatanController.text);
                 Navigator.pop(context);
                 addToCart();
               },
@@ -239,15 +228,11 @@ class _MenuDetailState extends State<MenuDetail> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF2D5EA2),
-        title: Text(
-          widget.name,
-          style: const TextStyle(
-            color: Colors.white, // warna teks putih
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: Text(widget.name,
+            style: const TextStyle(
+                color: Colors.white, fontWeight: FontWeight.bold)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white), // ikon putih
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -266,83 +251,62 @@ class _MenuDetailState extends State<MenuDetail> {
                   height: 200,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) {
-                      return child;
-                    } else {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 200,
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(Icons.fastfood, size: 80),
-                      ),
-                    );
-                  },
+                  loadingBuilder: (context, child, loadingProgress) =>
+                      loadingProgress == null
+                          ? child
+                          : const Center(child: CircularProgressIndicator()),
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    height: 200,
+                    color: Colors.grey[300],
+                    child: const Center(child: Icon(Icons.fastfood, size: 80)),
+                  ),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              widget.name,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-            ),
+            Text(widget.name,
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
             const SizedBox(height: 10),
-            Text(
-              'Rp${widget.price}',
-              style: const TextStyle(fontSize: 18, color: Colors.grey),
-            ),
+            Text('Rp${currencyFormatter.format(getFinalPrice())}',
+                style: const TextStyle(fontSize: 18, color: Colors.grey)),
             const SizedBox(height: 10),
-            const Text(
-              'Deskripsi:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
+            const Text('Deskripsi:',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
-                border: Border.all(color: Colors.grey),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                widget.deskripsi,
-                style: const TextStyle(fontSize: 16),
-              ),
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8)),
+              child:
+                  Text(widget.deskripsi, style: const TextStyle(fontSize: 16)),
             ),
             const SizedBox(height: 20),
             if (widget.kategori == 'minuman')
               SuhuSelector(
                 selectedSuhu: selectedSuhu,
-                onSelected: (suhu) => setState(() {
-                  selectedSuhu = suhu;
-                }),
+                onSelected: (suhu) => setState(() => selectedSuhu = suhu),
               ),
             const SizedBox(height: 10),
             Row(
               children: [
                 const Icon(Icons.star, color: Colors.amber, size: 20),
                 const SizedBox(width: 5),
-                Text(
-                  '${initialRating.toStringAsFixed(1)} / 5.0',
-                  style: const TextStyle(fontSize: 16),
-                ),
+                Text('${initialRating.toStringAsFixed(1)} / 5.0',
+                    style: const TextStyle(fontSize: 16)),
               ],
             ),
             RatingBarIndicator(
-              rating: double.tryParse(widget.rating) ?? 0.0,
+              rating: initialRating,
               itemBuilder: (context, index) =>
                   const Icon(Icons.star, color: Colors.amber),
               itemCount: 5,
               itemSize: 30.0,
               direction: Axis.horizontal,
             ),
-            Text('${widget.rating}/5.0', style: const TextStyle(fontSize: 16)),
-            const SizedBox(height: 20),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
@@ -362,10 +326,8 @@ class _MenuDetailState extends State<MenuDetail> {
                     borderRadius: BorderRadius.circular(10)),
               ),
               child: const Center(
-                child: Text(
-                  "Tambah ke Keranjang",
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                child: Text("Tambah ke Keranjang",
+                    style: TextStyle(color: Colors.white, fontSize: 16)),
               ),
             ),
           ],

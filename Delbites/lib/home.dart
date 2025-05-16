@@ -1,13 +1,8 @@
 import 'dart:convert';
-import 'dart:io';
 
-import 'package:Delbites/menu_detail.dart';
-import 'package:Delbites/riwayat_pesanan.dart';
-import 'package:Delbites/widgets/bottom_nav.dart';
+import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/widgets/menu_card.dart';
 import 'package:flutter/material.dart';
-import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:Delbites/keranjang.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -191,56 +186,55 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       child: SafeArea(
-        child: Stack(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Align(
-              alignment: Alignment.centerLeft,
+            Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
                     'Selamat Datang di DelBites',
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 18,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                     ),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
                   ),
                   const SizedBox(height: 8),
-                  Image.asset('assets/icon/logo1.png', width: 60, height: 60),
+                  Image.asset('assets/icon/logo1.png',
+                      width: 50, height: 50, fit: BoxFit.cover),
                 ],
               ),
             ),
-            Positioned(
-              top: -10,
-              right: 0,
-              child: IconButton(
-                icon: const Icon(Icons.shopping_cart,
-                    size: 30, color: Colors.white),
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  final id = prefs.getInt('id_pelanggan');
+            IconButton(
+              icon: const Icon(Icons.shopping_cart,
+                  size: 30, color: Colors.white),
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final id = prefs.getInt('id_pelanggan');
 
-                  if (id != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => KeranjangPage(idPelanggan: id),
-                      ),
-                    );
-                  } else {
-                    // Opsional: munculkan alert
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content:
-                            Text('Silakan isi data pelanggan terlebih dahulu.'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-              ),
+                if (id != null) {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => KeranjangPage(idPelanggan: id),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content:
+                          Text('Silakan isi data pelanggan terlebih dahulu.'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
