@@ -13,6 +13,10 @@ const String baseUrl = 'http://127.0.0.1:8000';
 
 class CheckoutPage extends StatefulWidget {
   final List<Map<String, dynamic>> pesanan;
+
+  @override
+  _CheckoutPageState createState() => _CheckoutPageState();
+
   final int idPelanggan;
   final int totalHarga;
 
@@ -22,9 +26,6 @@ class CheckoutPage extends StatefulWidget {
     required this.idPelanggan,
     required this.totalHarga,
   }) : super(key: key);
-
-  @override
-  State<CheckoutPage> createState() => _CheckoutPageState();
 }
 
 List<Map<String, dynamic>> buildDetailPemesanan(
@@ -72,18 +73,22 @@ class _CheckoutPageState extends State<CheckoutPage> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
 
+  @override
+  State<CheckoutPage> createState() => _CheckoutPageState();
+  bool isValidEmail(String email) {
+    final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    return emailRegex.hasMatch(email);
+  }
+
   int getTotalHarga() {
     int total = 0;
     for (var item in widget.pesanan) {
-      // Perbaikan untuk menangani price sebagai integer
       int price = 0;
       int quantity = 0;
 
-      // Handle berbagai kemungkinan tipe data untuk price
       if (item['price'] is int) {
         price = item['price'];
       } else if (item['price'] is String) {
-        // Coba parse string ke int
         price = int.tryParse(item['price']
                 .toString()
                 .replaceAll('Rp ', '')
@@ -91,7 +96,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
             0;
       }
 
-      // Handle berbagai kemungkinan tipe data untuk quantity
       if (item['quantity'] is int) {
         quantity = item['quantity'];
       } else {
@@ -103,7 +107,6 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return total;
   }
 
-  // Format harga untuk ditampilkan
   String formatPrice(dynamic price) {
     if (price is int) {
       return 'Rp ${price.toString().replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (match) => '${match[1]}.')}';
@@ -117,51 +120,56 @@ class _CheckoutPageState extends State<CheckoutPage> {
     return 'Rp 0';
   }
 
-Future<void> processPayment() async {
-  final nama = nameController.text.trim();
-  final telepon = phoneController.text.trim();
-  final email = emailController.text.trim();
+  Future<void> processPayment() async {
+    final nama = nameController.text.trim();
+    final telepon = phoneController.text.trim();
+    final email = emailController.text.trim();
 
-  if (nama.isEmpty || telepon.isEmpty || email.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Lengkapi semua data pelanggan.')),
-    );
-    return;
-  }
-
-  setState(() => isLoading = true);
-
-  try {
-    final prefs = await SharedPreferences.getInstance();
-
-    // ✅ Cek jika masih ada transaksi aktif, langsung pakai itu
-    final existingOrderId = prefs.getString('midtrans_order_id');
-    final existingRedirectUrl = prefs.getString('midtrans_redirect_url');
-    if (existingOrderId != null && existingRedirectUrl != null) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => MidtransPaymentPage(
-            redirectUrl: existingRedirectUrl,
-            orderId: existingOrderId,
-            pesanan: widget.pesanan,
-            idPelanggan: widget.idPelanggan,
-            totalHarga: getTotalHarga(),
-          ),
-        ),
+    if (nama.isEmpty || telepon.isEmpty || email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Lengkapi semua data pelanggan.')),
       );
       return;
     }
 
+    if (!isValidEmail(email)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Format email tidak valid.')),
+      );
+      return;
+    }
 
-      // Bersihkan transaksi Midtrans sebelumnya agar tidak terjadi tumpang tindih
+    setState(() => isLoading = true);
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final existingOrderId = prefs.getString('midtrans_order_id');
+      final existingRedirectUrl = prefs.getString('midtrans_redirect_url');
+
+      if (existingOrderId != null && existingRedirectUrl != null) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => MidtransPaymentPage(
+              redirectUrl: existingRedirectUrl,
+              orderId: existingOrderId,
+              pesanan: widget.pesanan,
+              idPelanggan: widget.idPelanggan,
+              totalHarga: getTotalHarga(),
+            ),
+          ),
+        );
+        return;
+      }
+
+      // Clear previous Midtrans transactions to avoid conflicts
       await prefs.remove('midtrans_order_id');
       await prefs.remove('midtrans_redirect_url');
 
       final int idPelanggan = await getOrCreatePelangganId(nama, telepon);
       final grossAmount = getTotalHarga();
 
-      // Kirim pesanan ke backend terlebih dahulu
+      // Send order to backend first
       final pemesananResponse = await http.post(
         Uri.parse('$baseUrl/api/pemesanan'),
         headers: {
@@ -187,22 +195,6 @@ Future<void> processPayment() async {
       final int idPemesanan = pemesananData['data']['id'];
       final orderId =
           'ORDER-$idPemesanan-${DateTime.now().millisecondsSinceEpoch}';
-
-      if (existingOrderId != null && existingRedirectUrl != null) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => MidtransPaymentPage(
-              redirectUrl: existingRedirectUrl,
-              orderId: existingOrderId,
-              pesanan: widget.pesanan,
-              idPelanggan: idPelanggan,
-              totalHarga: grossAmount,
-            ),
-          ),
-        );
-        return;
-      }
 
       final items = widget.pesanan
           .map((item) => {
@@ -241,26 +233,24 @@ Future<void> processPayment() async {
           await prefs.setString('midtrans_order_id', orderId);
           await prefs.setString('midtrans_redirect_url', redirectUrl);
 
-          if (existingOrderId != null && existingRedirectUrl != null) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => MidtransPaymentPage(
-                  redirectUrl: existingRedirectUrl,
-                  orderId: existingOrderId,
-                  pesanan: widget.pesanan,
-                  idPelanggan: idPelanggan,
-                  totalHarga: grossAmount,
-                ),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MidtransPaymentPage(
+                redirectUrl: redirectUrl,
+                orderId: orderId,
+                pesanan: widget.pesanan,
+                idPelanggan: idPelanggan,
+                totalHarga: grossAmount,
               ),
-            );
-            return;
-          }
+            ),
+          );
+          return;
         } else {
           throw Exception('Gagal membuat transaksi: ${result['message']}');
         }
       } else {
-        print("Respons bukan JSON:\n${response.body}");
+        print("Response bukan JSON:\n${response.body}");
         throw Exception('Server mengembalikan format tidak dikenali.');
       }
     } catch (e) {
@@ -275,20 +265,14 @@ Future<void> processPayment() async {
 
   Future<int> getOrCreatePelangganId(String nama, String telepon) async {
     final prefs = await SharedPreferences.getInstance();
-
-    // Cek jika id_pelanggan sudah disimpan
     final existingId = prefs.getInt('id_pelanggan');
     if (existingId != null) return existingId;
 
-    // Ambil device ID
     final deviceId = await getDeviceId();
-
-    // Simpan device ID kalau belum disimpan
     if (!prefs.containsKey('device_id')) {
       await prefs.setString('device_id', deviceId);
     }
 
-    // Cek ke backend apakah pelanggan dengan device_id sudah ada
     final checkResponse = await http.get(
       Uri.parse('$baseUrl/api/pelanggan/by-device?device_id=$deviceId'),
     );
@@ -301,7 +285,7 @@ Future<void> processPayment() async {
       return data['id'];
     }
 
-    // Jika belum ada, buat pelanggan baru
+    // If not found, create a new customer
     final createResponse = await http.post(
       Uri.parse('$baseUrl/api/pelanggan'),
       headers: {'Content-Type': 'application/json'},
@@ -336,7 +320,7 @@ Future<void> processPayment() async {
 
       final idPelanggan = await getOrCreatePelangganId(nama, telepon);
 
-      // 1. Kirim ke API pemesanan
+      // Send order to API
       final response = await http.post(
         Uri.parse('$baseUrl/api/pemesanan'),
         headers: {
@@ -353,25 +337,15 @@ Future<void> processPayment() async {
           'detail_pemesanan': buildDetailPemesanan(widget.pesanan),
         }),
       );
-      print('⏳ Sending pemesanan data:');
-      print(jsonEncode({
-        'id_pelanggan': idPelanggan,
-        'admin_id': null,
-        'total_harga': getTotalHarga(),
-        'metode_pembayaran': 'tunai',
-        'status': 'menunggu',
-        'waktu_pengambilan': DateTime.now().toIso8601String(),
-        'detail_pemesanan': buildDetailPemesanan(widget.pesanan),
-      }));
 
       if (response.statusCode == 201) {
-        // 2. Hapus keranjang setelah pemesanan berhasil
+        // Clear cart after successful order
         await http.delete(
           Uri.parse('$baseUrl/api/keranjang/pelanggan/$idPelanggan'),
           headers: {'Content-Type': 'application/json'},
         );
 
-        // 3. Navigasi ke halaman menunggu
+        // Navigate to waiting page
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -392,8 +366,6 @@ Future<void> processPayment() async {
   @override
   void initState() {
     super.initState();
-
-    // Ambil nama pelanggan dari SharedPreferences
     _getCustomerName();
   }
 
@@ -402,7 +374,6 @@ Future<void> processPayment() async {
     final name = prefs.getString('nama_pelanggan');
     final phone = prefs.getString('telepon_pelanggan');
 
-    // Setel nama pelanggan ke dalam nameController
     if (name != null) {
       nameController.text = name;
     }
@@ -432,7 +403,7 @@ Future<void> processPayment() async {
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : Padding(
+            : SingleChildScrollView(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -455,55 +426,60 @@ Future<void> processPayment() async {
                       ),
                     ),
                     if (selectedPayment != null &&
-                        selectedPayment != 'Bayar langsung di kasir')
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Customer Information',
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: phoneController,
-                              decoration: const InputDecoration(
-                                labelText: 'Nomor WhatsApp',
-                                border: OutlineInputBorder(),
+                        selectedPayment !=
+                            'Bayar langsung di Bayar langsung di kasir')
+                      if (selectedPayment != null &&
+                          selectedPayment != 'Bayar langsung di kasir')
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Customer Information',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                               ),
-                              keyboardType: TextInputType.phone,
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: nameController, // Nama sudah otomatis
-                              decoration: const InputDecoration(
-                                labelText: 'Full Name',
-                                border: OutlineInputBorder(),
+                              const SizedBox(height: 20),
+                              TextField(
+                                controller: phoneController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Nomor WhatsApp',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.phone,
                               ),
-                              readOnly: true, // Membaca saja, tidak bisa diedit
-                            ),
-                            const SizedBox(height: 10),
-                            TextField(
-                              controller: emailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                border: OutlineInputBorder(),
+                              const SizedBox(height: 10),
+                              TextField(
+                                controller: nameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Full Name',
+                                  border: OutlineInputBorder(),
+                                ),
+                                readOnly: true,
                               ),
-                              keyboardType: TextInputType.emailAddress,
-                            ),
-                          ],
+                              const SizedBox(height: 20),
+                              TextField(
+                                controller: emailController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Email',
+                                  border: OutlineInputBorder(),
+                                ),
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 30),
                     const Text(
                       'Pesanan',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 10),
-                    Expanded(
+                    const SizedBox(height: 20),
+                    Container(
+                      // Use Container instead of Expanded
+                      height: 100, // Set a fixed height
                       child: ListView.builder(
                         itemCount: widget.pesanan.length,
                         itemBuilder: (context, index) {
