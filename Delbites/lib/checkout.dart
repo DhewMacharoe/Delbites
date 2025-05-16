@@ -462,7 +462,7 @@ Future<void> processPayment() async {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Text(
-                              'Customer Information',
+                              'Informasi Pelanggan',
                               style: TextStyle(
                                   fontSize: 16, fontWeight: FontWeight.bold),
                             ),
