@@ -3,7 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class PelangganService {
-  final String _baseUrl = 'http://127.0.0.1:8000/api/pelanggan';
+  final String _baseUrl = 'https://delbites.d4trpl-itdel.id/api/pelanggan';
 
   Future<List<dynamic>> fetchPelanggan() async {
     final response = await http.get(Uri.parse('$_baseUrl/pelanggan'));
@@ -30,7 +30,7 @@ class PelangganService {
     required String telepon,
     required String deviceId,
   }) async {
-    final url = Uri.parse('http://127.0.0.1:8000/api/pelanggan');
+    final url = Uri.parse('https://delbites.d4trpl-itdel.id/api/pelanggan');
 
     final response = await http.post(
       url,

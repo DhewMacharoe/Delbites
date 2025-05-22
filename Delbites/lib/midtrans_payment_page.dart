@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
-const String baseUrl = 'http://127.0.0.1:8000';
+const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
 class MidtransPaymentPage extends StatefulWidget {
   final String redirectUrl;

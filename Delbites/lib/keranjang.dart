@@ -32,7 +32,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
     try {
       final response = await http.get(
         Uri.parse(
-            'http://localhost:8000/api/keranjang/pelanggan/${widget.idPelanggan}'),
+            'https://delbites.d4trpl-itdel.id/api/keranjang/pelanggan/${widget.idPelanggan}'),
       );
 
       if (response.statusCode == 200) {
@@ -80,7 +80,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
       }
 
       final response = await http.put(
-        Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
+        Uri.parse('https://delbites.d4trpl-itdel.id/api/keranjang/${item['id']}'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
           'jumlah': newQuantity,
@@ -109,7 +109,7 @@ class _KeranjangPageState extends State<KeranjangPage> {
     try {
       final item = pesanan[index];
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/api/keranjang/${item['id']}'),
+        Uri.parse('https://delbites.d4trpl-itdel.id/api/keranjang/${item['id']}'),
       );
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
@@ -358,43 +358,4 @@ class _KeranjangPageState extends State<KeranjangPage> {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
-
-  // Widget _buildBottomNavigationBar(BuildContext context) {
-  //   return CurvedNavigationBar(
-  //     backgroundColor: Colors.white,
-  //     color: const Color(0xFF2D5EA2),
-  //     buttonBackgroundColor: const Color(0xFF2D5EA2),
-  //     height: 60,
-  //     animationDuration: const Duration(milliseconds: 300),
-  //     index: _currentIndex,
-  //     items: const <Widget>[
-  //       Icon(Icons.home, size: 30, color: Colors.white),
-  //       Icon(Icons.access_time, size: 30, color: Colors.white),
-  //       Icon(Icons.shopping_cart, size: 30, color: Colors.white),
-  //     ],
-  //     onTap: (index) async {
-  //       if (index == _currentIndex) return;
-
-  //       setState(() {
-  //         _currentIndex = index;
-  //       });
-
-  //       // Tunggu animasi navbar selesai dulu (300ms default)
-  //       await Future.delayed(const Duration(milliseconds: 300));
-
-  //       if (index == 0) {
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const HomePage()),
-  //         );
-  //       } else if (index == 1) {
-  //         Navigator.pushReplacement(
-  //           context,
-  //           MaterialPageRoute(builder: (context) => const RiwayatPesananPage()),
-  //         );
-  //       }
-  //       // index 2 = tetap di halaman ini
-  //     },
-  //   );
-  // }
 }

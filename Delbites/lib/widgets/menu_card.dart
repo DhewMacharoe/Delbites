@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-const String baseUrl = 'http://127.0.0.1:8000';
+const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
 class MenuCard extends StatelessWidget {
   final Map<String, String> item;
@@ -186,7 +186,7 @@ class MenuCard extends StatelessWidget {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(16)),
                     child: Image.network(
-                      "$baseUrl/storage/${item['image']}",
+                      "'https://delbites.d4trpl-itdel.id/storage/${item['image']}'",
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,

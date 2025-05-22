@@ -4,7 +4,7 @@ import 'package:Delbites/models/menu.dart';
 import 'package:http/http.dart' as http;
 
 class MenuService {
-  final String baseUrl = 'http://127.0.0.1:8000/api/menu';
+  final String baseUrl = 'https://delbites.d4trpl-itdel.id/api/menu';
 
   Future<List<Menu>> fetchMenus() async {
     final response = await http.get(Uri.parse(baseUrl));
