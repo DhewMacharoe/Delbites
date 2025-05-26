@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
 
 const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
@@ -139,17 +140,15 @@ class MenuCard extends StatelessWidget {
     return NumberFormat.decimalPattern('id').format(price);
   }
 
-  Future<String> getDeviceId() async {
-    final deviceInfo = DeviceInfoPlugin();
-    if (Platform.isAndroid) {
-      final info = await deviceInfo.androidInfo;
-      return info.id?.toLowerCase() ?? '';
-    } else if (Platform.isIOS) {
-      final info = await deviceInfo.iosInfo;
-      return info.identifierForVendor?.toLowerCase() ?? '';
-    }
-    return '';
+Future<String> getDeviceId() async {
+  final prefs = await SharedPreferences.getInstance();
+  String? deviceId = prefs.getString('device_id');
+  if (deviceId == null) {
+    deviceId = const Uuid().v4(); // UUID acak
+    await prefs.setString('device_id', deviceId);
   }
+  return deviceId;
+}
 
   void _navigateToMenuDetail(BuildContext context, Map<String, String> item) {
     Navigator.push(
