@@ -6,6 +6,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 
 const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
@@ -131,6 +132,13 @@ class MenuCard extends StatelessWidget {
     );
   }
 
+  String formatPrice(String rawPrice) {
+    final int price = int.tryParse(
+            rawPrice.replaceAll('.', '').replaceAll('Rp', '').trim()) ??
+        0;
+    return NumberFormat.decimalPattern('id').format(price);
+  }
+
   Future<String> getDeviceId() async {
     final deviceInfo = DeviceInfoPlugin();
     if (Platform.isAndroid) {
@@ -186,7 +194,7 @@ class MenuCard extends StatelessWidget {
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(16)),
                     child: Image.network(
-                      "'https://delbites.d4trpl-itdel.id/storage/${item['image']}'",
+                      'https://delbites.d4trpl-itdel.id/storage/${item['image']}',
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
@@ -218,7 +226,7 @@ class MenuCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Rp ${item['price']}',
+                          'Rp ${formatPrice(item['price']!)}',
                           style: const TextStyle(color: Colors.black87),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,

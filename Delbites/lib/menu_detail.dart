@@ -275,12 +275,12 @@ class _MenuDetailState extends State<MenuDetail> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             const SizedBox(height: 5),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(8)),
+              // width: double.infinity,
+              // padding: const EdgeInsets.all(12),
+              // decoration: BoxDecoration(
+              //     color: Colors.white,
+              //     border: Border.all(color: Colors.grey),
+              //     borderRadius: BorderRadius.circular(8)),
               child:
                   Text(widget.deskripsi, style: const TextStyle(fontSize: 16)),
             ),

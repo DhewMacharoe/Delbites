@@ -1,59 +1,31 @@
 import 'dart:convert';
-
-import 'package:Delbites/models/menu.dart';
 import 'package:http/http.dart' as http;
 
+const String baseUrl = 'https://delbites.d4trpl-itdel.id';
+
 class MenuService {
-  final String baseUrl = 'https://delbites.d4trpl-itdel.id/api/menu';
-
-  Future<List<Menu>> fetchMenus() async {
-    final response = await http.get(Uri.parse(baseUrl));
+  static Future<List<Map<String, String>>> fetchMenu() async {
+    final response = await http.get(Uri.parse('$baseUrl/api/menu'));
 
     if (response.statusCode == 200) {
-      List<dynamic> data = jsonDecode(response.body);
-      return data.map((item) => Menu.fromJson(item)).toList();
+      final List<dynamic> data = jsonDecode(response.body);
+      return data.map<Map<String, String>>((item) {
+        return {
+          'id': item['id'].toString(),
+          'name': item['nama_menu'].toString(),
+          'price': item['harga'].toString(),
+          'stok': item['stok'].toString(),
+          'stok_terjual': (item['total_terjual'] ?? '0').toString(),
+          'kategori': item['kategori'].toString(),
+          'image': item['gambar'].toString(),
+          'rating': (item['rating'] ?? '0.0').toString(),
+          'deskripsi': item['deskripsi']?.toString() ?? '',
+        };
+      }).toList();
     } else {
-      throw Exception('Gagal mengambil data menu');
+      throw Exception('Gagal memuat menu');
     }
   }
 
-  Future<List<Menu>> fetchTopMenus() async {
-    final response = await http.get(Uri.parse('$baseUrl/top'));
-
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-
-      List<dynamic> data = responseData['data'];
-      return data.map((item) => Menu.fromJson(item)).toList();
-    } else {
-      throw Exception('Gagal mengambil top menu');
-    }
-  }
-
-  Future<bool> tambahMenu({
-    required String namaMenu,
-    required int harga,
-    required int stok,
-    required String kategori,
-  }) async {
-    final response = await http.post(
-      Uri.parse(baseUrl),
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: {
-        'nama_menu': namaMenu,
-        'harga': harga.toString(),
-        'stok': stok.toString(),
-        'kategori': kategori,
-      },
-    );
-
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      print('Error: ${response.body}');
-      return false;
-    }
-  }
+  
 }
