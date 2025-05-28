@@ -65,8 +65,7 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
           }
 
           // Cegah redirect ke example.com
-          if (url.startsWith('http://example.com') ||
-              url.contains('order_id=')) {
+          if (url.contains('order_id=')) {
             _handlePaymentSuccess(); // Asumsikan sukses, atau panggil check status manual
           }
         }),

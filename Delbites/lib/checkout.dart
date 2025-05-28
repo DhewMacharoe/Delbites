@@ -390,6 +390,57 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return false;
       },
       child: Scaffold(
+        bottomNavigationBar: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 4)],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Total Harga:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    PaymentUtils.formatToRupiah(getTotalHarga()),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  onPressed: selectedPayment == null
+                      ? null
+                      : selectedPayment == 'Bayar langsung di kasir'
+                          ? processCashPayment
+                          : processPayment,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: selectedPayment == null
+                        ? Colors.grey
+                        : const Color(0xFF2D5EA2),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: Text(
+                    selectedPayment == null
+                        ? 'Pilih Pembayaran'
+                        : 'Bayar dengan $selectedPayment',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
         appBar: AppBar(
           title: const Text(
             'Bayar',
@@ -403,172 +454,142 @@ class _CheckoutPageState extends State<CheckoutPage> {
         ),
         body: isLoading
             ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Pembayaran',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 100,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          _paymentOption(
-                              'Bayar langsung di kasir', Icons.store),
-                          _paymentOption('Bayar Non-Tunai', Icons.credit_card),
-                        ],
-                      ),
-                    ),
-                    if (selectedPayment != null &&
-                        selectedPayment !=
-                            'Bayar langsung di Bayar langsung di kasir')
-                      if (selectedPayment != null &&
-                          selectedPayment != 'Bayar langsung di kasir')
-                        Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Customer Information',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 20),
-                              TextField(
-                                controller: phoneController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Nomor WhatsApp',
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType: TextInputType.phone,
-                              ),
-                              const SizedBox(height: 10),
-                              TextField(
-                                controller: nameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Full Name',
-                                  border: OutlineInputBorder(),
-                                ),
-                                readOnly: true,
-                              ),
-                              const SizedBox(height: 20),
-                              TextField(
-                                controller: emailController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Email',
-                                  border: OutlineInputBorder(),
-                                ),
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                            ],
-                          ),
-                        ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      'Pesanan',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 20),
-                    Container(
-                      // Use Container instead of Expanded
-                      height: 100, // Set a fixed height
-                      child: ListView.builder(
-                        itemCount: widget.pesanan.length,
-                        itemBuilder: (context, index) {
-                          final item = widget.pesanan[index];
-                          return Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16.0),
+                    child: ConstrainedBox(
+                      constraints:
+                          BoxConstraints(minHeight: constraints.maxHeight),
+                      child: IntrinsicHeight(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Pembayaran',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            SizedBox(
+                              height: 100,
+                              child: ListView(
+                                scrollDirection: Axis.horizontal,
                                 children: [
-                                  ListTile(
-                                    leading:
-                                        const Icon(Icons.fastfood, size: 40),
-                                    title: Text(item['name']),
-                                    subtitle: Text(
-                                      '${formatPrice(item['price'])} x ${item['quantity']}',
-                                    ),
-                                  ),
-                                  if (item['suhu'] != null)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 16.0, bottom: 8.0),
-                                      child: Text(
-                                        'Suhu: ${item['suhu']}',
-                                        style:
-                                            const TextStyle(color: Colors.grey),
-                                      ),
-                                    ),
-                                  if (item['catatan'] != null &&
-                                      item['catatan'].isNotEmpty)
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 16.0, bottom: 8.0),
-                                      child: Text(
-                                        'Catatan: ${item['catatan']}',
-                                        style: const TextStyle(
-                                          fontStyle: FontStyle.italic,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ),
+                                  _paymentOption(
+                                      'Bayar langsung di kasir', Icons.store),
+                                  _paymentOption(
+                                      'Bayar Non-Tunai', Icons.credit_card),
                                 ],
                               ),
                             ),
-                          );
-                        },
+                            if (selectedPayment != null &&
+                                selectedPayment != 'Bayar langsung di kasir')
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Customer Information',
+                                      style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextField(
+                                      controller: phoneController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Nomor WhatsApp',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      keyboardType: TextInputType.phone,
+                                    ),
+                                    const SizedBox(height: 10),
+                                    TextField(
+                                      controller: nameController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Full Name',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      readOnly: true,
+                                    ),
+                                    const SizedBox(height: 20),
+                                    TextField(
+                                      controller: emailController,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Email',
+                                        border: OutlineInputBorder(),
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            const SizedBox(height: 30),
+                            const Text(
+                              'Pesanan',
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 20),
+                            ...widget.pesanan.map((item) {
+                              return Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      ListTile(
+                                        leading: item['image'] != null
+                                            ? Image.network(
+                                                'https://delbites.d4trpl-itdel.id/storage/${item['image']}',
+                                                width: 40,
+                                                height: 40,
+                                                fit: BoxFit.cover,
+                                              )
+                                            : const Icon(Icons.fastfood,
+                                                size: 40),
+                                        title: Text(item['name']),
+                                        subtitle: Text(
+                                          '${formatPrice(item['price'])} x ${item['quantity']}',
+                                        ),
+                                      ),
+                                      if (item['suhu'] != null)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 16.0, bottom: 8.0),
+                                          child: Text('Suhu: ${item['suhu']}',
+                                              style: const TextStyle(
+                                                  color: Colors.grey)),
+                                        ),
+                                      if (item['catatan'] != null &&
+                                          item['catatan'].isNotEmpty)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              left: 16.0, bottom: 8.0),
+                                          child: Text(
+                                            'Catatan: ${item['catatan']}',
+                                            style: const TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            const SizedBox(height: 80), // Spacer for bottom bar
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Total Harga',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                        Text(
-                          PaymentUtils.formatToRupiah(getTotalHarga()),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: selectedPayment == null
-                            ? null
-                            : selectedPayment == 'Bayar langsung di kasir'
-                                ? processCashPayment
-                                : processPayment,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: selectedPayment == null
-                              ? Colors.grey
-                              : const Color(0xFF2D5EA2),
-                          minimumSize: const Size(double.infinity, 50),
-                        ),
-                        child: Text(
-                          selectedPayment == null
-                              ? 'Pilih Pembayaran'
-                              : 'Bayar dengan $selectedPayment',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  );
+                },
               ),
       ),
     );
