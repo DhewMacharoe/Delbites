@@ -1,5 +1,6 @@
+import 'package:Delbites/main_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:Delbites/home.dart';
+
 
 class PaymentSuccessPage extends StatelessWidget {
   final String orderId;
@@ -59,10 +60,10 @@ class PaymentSuccessPage extends StatelessWidget {
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushAndRemoveUntil(
+                    Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => const HomePage()),
-                      (route) => false,
+                      MaterialPageRoute(builder: (context) => const MainScreen()),
+                      
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -160,11 +161,11 @@ class PaymentFailedPage extends StatelessWidget {
                     const SizedBox(width: 20),
                     ElevatedButton(
                       onPressed: () {
-                        Navigator.pushAndRemoveUntil(
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const HomePage()),
-                          (route) => false,
+                              builder: (context) => const MainScreen()),
+                        
                         );
                       },
                       style: ElevatedButton.styleFrom(

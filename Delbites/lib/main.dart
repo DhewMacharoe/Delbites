@@ -2,8 +2,17 @@ import 'package:Delbites/main_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:flutter/services.dart';
 
 void main() {
+    WidgetsFlutterBinding.ensureInitialized(); // pastikan ini ada
+
+  // Kunci orientasi ke potret (portrait)
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  
   tz.initializeTimeZones();
   tz.setLocalLocation(tz.getLocation('Asia/Jakarta'));
   runApp(const MyApp());
