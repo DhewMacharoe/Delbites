@@ -1,12 +1,10 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:Delbites/menu_detail.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 const String baseUrl = 'https://delbites.d4trpl-itdel.id';
@@ -45,7 +43,9 @@ class MenuCard extends StatelessWidget {
         _navigateToMenuDetail(context, item);
         return;
       }
-    } catch (_) {}
+    } catch (e) {
+      print("Error fetching customer data: $e");
+    }
 
     // Tampilkan form jika pelanggan belum ada
     _showPelangganForm(context, storedDeviceId, item);
@@ -55,6 +55,7 @@ class MenuCard extends StatelessWidget {
       BuildContext context, String deviceId, Map<String, String> item) {
     String nama = '';
     String nomor = '';
+    String email = '';
 
     showDialog(
       context: context,
@@ -77,6 +78,13 @@ class MenuCard extends StatelessWidget {
                   labelText: "Nomor WhatsApp",
                 ),
               ),
+              TextField(
+                onChanged: (value) => email = value.trim(),
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(
+                  labelText: "Email",
+                ),
+              ),
             ],
           ),
           actions: [
@@ -86,10 +94,14 @@ class MenuCard extends StatelessWidget {
             ),
             TextButton(
               onPressed: () async {
-                if (nama.isEmpty || nomor.isEmpty) {
+                final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                if (nama.isEmpty ||
+                    nomor.isEmpty ||
+                    email.isEmpty ||
+                    !emailRegex.hasMatch(email)) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                        content: Text("Nama dan nomor HP wajib diisi.")),
+                        content: Text("Semua data wajib diisi dengan benar.")),
                   );
                   return;
                 }
@@ -101,6 +113,7 @@ class MenuCard extends StatelessWidget {
                     body: jsonEncode({
                       'nama': nama,
                       'telepon': nomor,
+                      'email': email,
                       'device_id': deviceId,
                     }),
                   );
@@ -111,6 +124,8 @@ class MenuCard extends StatelessWidget {
                     await prefs.setInt('id_pelanggan', data['id']);
                     await prefs.setString('nama_pelanggan', data['nama']);
                     await prefs.setString('telepon_pelanggan', data['telepon']);
+                    await prefs.setString(
+                        'email_pelanggan', email); // Simpan email
                     Navigator.pop(context);
                     _navigateToMenuDetail(context, item);
                   } else {
@@ -140,15 +155,15 @@ class MenuCard extends StatelessWidget {
     return NumberFormat.decimalPattern('id').format(price);
   }
 
-Future<String> getDeviceId() async {
-  final prefs = await SharedPreferences.getInstance();
-  String? deviceId = prefs.getString('device_id');
-  if (deviceId == null) {
-    deviceId = const Uuid().v4(); // UUID acak
-    await prefs.setString('device_id', deviceId);
+  Future<String> getDeviceId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? deviceId = prefs.getString('device_id');
+    if (deviceId == null) {
+      deviceId = const Uuid().v4(); // UUID acak
+      await prefs.setString('device_id', deviceId);
+    }
+    return deviceId;
   }
-  return deviceId;
-}
 
   void _navigateToMenuDetail(BuildContext context, Map<String, String> item) {
     Navigator.push(

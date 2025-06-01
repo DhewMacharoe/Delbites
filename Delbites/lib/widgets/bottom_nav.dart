@@ -1,7 +1,5 @@
 import 'package:Delbites/home.dart';
-import 'package:Delbites/keranjang.dart';
 import 'package:Delbites/riwayat_pesanan.dart';
-
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 

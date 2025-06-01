@@ -75,6 +75,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   @override
   State<CheckoutPage> createState() => _CheckoutPageState();
+
   bool isValidEmail(String email) {
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
     return emailRegex.hasMatch(email);
@@ -166,7 +167,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
       await prefs.remove('midtrans_order_id');
       await prefs.remove('midtrans_redirect_url');
 
-      final int idPelanggan = await getOrCreatePelangganId(nama, telepon);
+      final int idPelanggan =
+          await getOrCreatePelangganId(nama, telepon, email);
       final grossAmount = getTotalHarga();
 
       // Send order to backend first
@@ -263,7 +265,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
     }
   }
 
-  Future<int> getOrCreatePelangganId(String nama, String telepon) async {
+  Future<int> getOrCreatePelangganId(
+      String nama, String telepon, String email) async {
     final prefs = await SharedPreferences.getInstance();
     final existingId = prefs.getInt('id_pelanggan');
     if (existingId != null) return existingId;
@@ -282,6 +285,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       await prefs.setInt('id_pelanggan', data['id']);
       await prefs.setString('nama_pelanggan', data['nama']);
       await prefs.setString('telepon_pelanggan', data['telepon']);
+      await prefs.setString('email_pelanggan', data['email']);
       return data['id'];
     }
 
@@ -292,6 +296,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
       body: jsonEncode({
         'nama': nama,
         'telepon': telepon,
+        'email': email,
         'device_id': deviceId,
       }),
     );
@@ -309,6 +314,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
     try {
       final nama = nameController.text.trim();
       final telepon = phoneController.text.trim();
+      final email = emailController.text.trim();
 
       if (nama.isEmpty || telepon.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -318,7 +324,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         return;
       }
 
-      final idPelanggan = await getOrCreatePelangganId(nama, telepon);
+      final idPelanggan = await getOrCreatePelangganId(nama, telepon, email);
 
       // Send order to API
       final response = await http.post(
@@ -371,15 +377,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
 
   void _getCustomerName() async {
     final prefs = await SharedPreferences.getInstance();
-    final name = prefs.getString('nama_pelanggan');
-    final phone = prefs.getString('telepon_pelanggan');
-
-    if (name != null) {
-      nameController.text = name;
-    }
-    if (phone != null) {
-      phoneController.text = phone;
-    }
+    setState(() {
+      emailController.text = prefs.getString('email_pelanggan') ?? '';
+      nameController.text = prefs.getString('nama_pelanggan') ?? '';
+      phoneController.text = prefs.getString('telepon_pelanggan') ?? '';
+    });
   }
 
   @override
@@ -498,12 +500,14 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                           fontWeight: FontWeight.bold),
                                     ),
                                     const SizedBox(height: 20),
+                                    // Hidden fields for customer information
                                     TextField(
                                       controller: phoneController,
                                       decoration: const InputDecoration(
                                         labelText: 'Nomor WhatsApp',
                                         border: OutlineInputBorder(),
                                       ),
+                                      readOnly: true,
                                       keyboardType: TextInputType.phone,
                                     ),
                                     const SizedBox(height: 10),
@@ -523,6 +527,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         border: OutlineInputBorder(),
                                       ),
                                       keyboardType: TextInputType.emailAddress,
+                                      readOnly: true,
                                     ),
                                   ],
                                 ),
@@ -583,7 +588,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 ),
                               );
                             }).toList(),
-                            const SizedBox(height: 80), // Spacer for bottom bar
+                            const SizedBox(height: 80),
                           ],
                         ),
                       ),

@@ -1,11 +1,8 @@
-import 'dart:convert';
-
 import 'package:Delbites/keranjang.dart';
+import 'package:Delbites/services/menu_services.dart';
 import 'package:Delbites/widgets/menu_card.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:Delbites/services/menu_services.dart';
 
 const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
@@ -47,22 +44,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> fetchMenu() async {
-  setState(() => isLoading = true);
-  try {
-    allItems = await MenuService.fetchMenu();
-    allItems.sort((a, b) => int.parse(b['stok_terjual']!)
-        .compareTo(int.parse(a['stok_terjual']!)));
-    setState(() {
-      displayedItems = allItems.take(8).toList();
-      isLoading = false;
-    });
-  } catch (e) {
-    setState(() => isLoading = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Terjadi kesalahan: $e')),
-    );
+    setState(() => isLoading = true);
+    try {
+      allItems = await MenuService.fetchMenu();
+      allItems.sort((a, b) => int.parse(b['stok_terjual']!)
+          .compareTo(int.parse(a['stok_terjual']!)));
+      setState(() {
+        displayedItems = allItems.take(8).toList();
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Terjadi kesalahan: $e')),
+      );
+    }
   }
-}
 
   void filterCategory(String category) {
     setState(() {
