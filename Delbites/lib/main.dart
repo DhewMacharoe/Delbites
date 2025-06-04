@@ -5,9 +5,8 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/services.dart';
 
 void main() {
-    WidgetsFlutterBinding.ensureInitialized(); // pastikan ini ada
+    WidgetsFlutterBinding.ensureInitialized();
 
-  // Kunci orientasi ke potret (portrait)
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,

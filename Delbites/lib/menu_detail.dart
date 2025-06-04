@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:Delbites/login_page.dart'; // Import halaman login
 import 'package:Delbites/suhu_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -51,10 +52,30 @@ class _MenuDetailState extends State<MenuDetail> {
       final prefs = await SharedPreferences.getInstance();
       final idPelanggan = prefs.getInt('id_pelanggan');
 
-      if (idPelanggan == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sesi tidak valid, silahkan coba lagi')),
+      if (idPelanggan == null || idPelanggan == 0) {
+        // Cek juga jika idPelanggan adalah 0 (nilai fallback)
+        // Jika idPelanggan null atau 0, arahkan ke halaman login
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => const LoginPage()), // Arahkan ke LoginPage
         );
+
+        // Jika data berhasil diisi (result adalah true), coba lagi tambahkan ke keranjang
+        if (result == true) {
+          addToCart();
+        } else {
+          // Jika pengguna membatalkan atau tidak mengisi data, tampilkan pesan
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                    'Penambahan ke keranjang dibatalkan karena data pelanggan belum lengkap.'),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
         return;
       }
 
@@ -77,13 +98,15 @@ class _MenuDetailState extends State<MenuDetail> {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final responseData = json.decode(response.body);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(responseData['message'] ??
-                'Item berhasil ditambahkan ke keranjang'),
-            backgroundColor: Colors.green,
-          ),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(responseData['message'] ??
+                  'Item berhasil ditambahkan ke keranjang'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
         Navigator.pop(context);
       } else {
         final errorData = json.decode(response.body);
@@ -92,122 +115,27 @@ class _MenuDetailState extends State<MenuDetail> {
       }
     } catch (e) {
       final errorMsg = e.toString();
+      // Periksa apakah error terkait validasi atau pelanggan belum terdaftar
       if (errorMsg.toLowerCase().contains('validasi') ||
           errorMsg.toLowerCase().contains('pelanggan')) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('id_pelanggan');
-        _showPelangganDialog();
+        await prefs.remove(
+            'id_pelanggan'); // Hapus ID pelanggan lokal yang tidak valid
+        // Tidak perlu memanggil _showPelangganDialog lagi, karena sudah ditangani di awal addToCart
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Gagal menambahkan ke keranjang: Pelanggan Belum Terdaftar',
-            style: TextStyle(color: Colors.white),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal menambahkan ke keranjang: ${e.toString().contains("Exception:") ? e.toString().split("Exception:")[1].trim() : e.toString()}',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
           ),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
-  void _showPelangganDialog() {
-    String nama = '';
-    String nomor = '';
-    String email = '';
-    final _formKey = GlobalKey<FormState>();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Lengkapi Data Pelanggan"),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  decoration: const InputDecoration(labelText: "Nama Lengkap"),
-                  validator: (value) => (value == null || value.trim().isEmpty)
-                      ? 'Nama wajib diisi'
-                      : null,
-                  onChanged: (value) => nama = value.trim(),
-                ),
-                TextFormField(
-                  decoration:
-                      const InputDecoration(labelText: "Nomor WhatsApp"),
-                  keyboardType: TextInputType.phone,
-                  validator: (value) => (value == null || value.trim().isEmpty)
-                      ? 'Nomor HP wajib diisi'
-                      : null,
-                  onChanged: (value) => nomor = value.trim(),
-                ),
-                TextFormField(
-                  decoration: const InputDecoration(labelText: "Email"),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Email wajib diisi';
-                    }
-                    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
-                    if (!emailRegex.hasMatch(value.trim())) {
-                      return 'Format email tidak valid';
-                    }
-                    return null;
-                  },
-                  onChanged: (value) => email = value.trim(),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  try {
-                    final prefs = await SharedPreferences.getInstance();
-                    final deviceId = prefs.getString('device_id') ?? '';
-                    final response = await http.post(
-                      Uri.parse('$baseUrl/api/pelanggan'),
-                      headers: {'Content-Type': 'application/json'},
-                      body: jsonEncode({
-                        'nama': nama,
-                        'telepon': nomor,
-                        'email': email,
-                        'device_id': deviceId,
-                      }),
-                    );
-                    if (response.statusCode == 200 ||
-                        response.statusCode == 201) {
-                      final data = jsonDecode(response.body);
-                      await prefs.setInt('id_pelanggan', data['id']);
-                      await prefs.setString('nama_pelanggan', data['nama']);
-                      await prefs.setString(
-                          'telepon_pelanggan', data['telepon'] ?? '');
-                      await prefs.setString('email_pelanggan', email);
-                      Navigator.pop(context);
-                      addToCart();
-                    } else {
-                      throw Exception('Gagal menyimpan pelanggan');
-                    }
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Gagal menyimpan pelanggan: $e')),
-                    );
-                  }
-                }
-              },
-              child: const Text("Simpan"),
-            ),
-          ],
         );
-      },
-    );
+      }
+    }
   }
 
   void _showCatatanDialog(BuildContext context) {
@@ -234,7 +162,7 @@ class _MenuDetailState extends State<MenuDetail> {
               onPressed: () {
                 setState(() => catatanTambahan = _catatanController.text);
                 Navigator.pop(context);
-                addToCart();
+                addToCart(); // Panggil addToCart setelah catatan diisi
               },
               child: const Text('Tambah'),
             ),
@@ -326,14 +254,17 @@ class _MenuDetailState extends State<MenuDetail> {
               key: const Key("add-to-cart-button"),
               onPressed: () {
                 if (widget.kategori == 'minuman' && selectedSuhu == null) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Pilih versi minuman terlebih dahulu!'),
-                    ),
-                  );
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Pilih versi minuman terlebih dahulu!'),
+                      ),
+                    );
+                  }
                   return;
                 }
-                _showCatatanDialog(context);
+                _showCatatanDialog(
+                    context); // Panggil dialog catatan terlebih dahulu
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF4C53A5),

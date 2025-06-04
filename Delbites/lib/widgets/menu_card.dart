@@ -1,11 +1,7 @@
-import 'dart:convert';
-
 import 'package:Delbites/menu_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:uuid/uuid.dart';
+// import 'package:uuid/uuid.dart'; // Tidak lagi diperlukan
 
 const String baseUrl = 'https://delbites.d4trpl-itdel.id';
 
@@ -14,140 +10,15 @@ class MenuCard extends StatelessWidget {
 
   const MenuCard({Key? key, required this.item}) : super(key: key);
 
+  // Fungsi untuk memeriksa data pelanggan dan menavigasi ke detail menu
   Future<void> checkAndNavigate(
       BuildContext context, Map<String, String> item) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existingId = prefs.getInt('id_pelanggan');
-
-    if (existingId != null) {
-      _navigateToMenuDetail(context, item);
-      return;
-    }
-
-    String? storedDeviceId = prefs.getString('device_id');
-    if (storedDeviceId == null || storedDeviceId.isEmpty) {
-      storedDeviceId = (await getDeviceId()).toLowerCase();
-      await prefs.setString('device_id', storedDeviceId);
-    }
-
-    try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/pelanggan/by-device?device_id=$storedDeviceId'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        await prefs.setInt('id_pelanggan', data['id']);
-        await prefs.setString('nama_pelanggan', data['nama']);
-        await prefs.setString('telepon_pelanggan', data['telepon'] ?? '');
-        _navigateToMenuDetail(context, item);
-        return;
-      }
-    } catch (e) {
-      print("Error fetching customer data: $e");
-    }
-
-    // Tampilkan form jika pelanggan belum ada
-    _showPelangganForm(context, storedDeviceId, item);
+    // Navigasi langsung ke MenuDetail.
+    // Logika pengecekan dan pengisian data pelanggan kini ditangani di MenuDetail saat addToCart.
+    _navigateToMenuDetail(context, item);
   }
 
-  void _showPelangganForm(
-      BuildContext context, String deviceId, Map<String, String> item) {
-    String nama = '';
-    String nomor = '';
-    String email = '';
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text("Lengkapi Data Pelanggan"),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                onChanged: (value) => nama = value,
-                decoration: const InputDecoration(
-                  labelText: "Nama Lengkap",
-                ),
-              ),
-              TextField(
-                onChanged: (value) => nomor = value,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: "Nomor WhatsApp",
-                ),
-              ),
-              TextField(
-                onChanged: (value) => email = value.trim(),
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: "Email",
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Batal"),
-            ),
-            TextButton(
-              onPressed: () async {
-                final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-                if (nama.isEmpty ||
-                    nomor.isEmpty ||
-                    email.isEmpty ||
-                    !emailRegex.hasMatch(email)) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text("Semua data wajib diisi dengan benar.")),
-                  );
-                  return;
-                }
-
-                try {
-                  final response = await http.post(
-                    Uri.parse('$baseUrl/api/pelanggan'),
-                    headers: {'Content-Type': 'application/json'},
-                    body: jsonEncode({
-                      'nama': nama,
-                      'telepon': nomor,
-                      'email': email,
-                      'device_id': deviceId,
-                    }),
-                  );
-
-                  if (response.statusCode == 201) {
-                    final data = jsonDecode(response.body);
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.setInt('id_pelanggan', data['id']);
-                    await prefs.setString('nama_pelanggan', data['nama']);
-                    await prefs.setString('telepon_pelanggan', data['telepon']);
-                    await prefs.setString(
-                        'email_pelanggan', email); // Simpan email
-                    Navigator.pop(context);
-                    _navigateToMenuDetail(context, item);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text("Gagal menyimpan data pelanggan")),
-                    );
-                  }
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Gagal: $e")),
-                  );
-                }
-              },
-              child: const Text("Simpan"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
+  // Fungsi format harga
   String formatPrice(String rawPrice) {
     final int price = int.tryParse(
             rawPrice.replaceAll('.', '').replaceAll('Rp', '').trim()) ??
@@ -155,16 +26,10 @@ class MenuCard extends StatelessWidget {
     return NumberFormat.decimalPattern('id').format(price);
   }
 
-  Future<String> getDeviceId() async {
-    final prefs = await SharedPreferences.getInstance();
-    String? deviceId = prefs.getString('device_id');
-    if (deviceId == null) {
-      deviceId = const Uuid().v4(); // UUID acak
-      await prefs.setString('device_id', deviceId);
-    }
-    return deviceId;
-  }
+  // Fungsi getDeviceId dihapus dari sini karena sudah dipindahkan ke isi_data.dart
+  // Future<String> getDeviceId() async { ... }
 
+  // Fungsi untuk menavigasi ke halaman detail menu
   void _navigateToMenuDetail(BuildContext context, Map<String, String> item) {
     Navigator.push(
       context,
@@ -189,6 +54,7 @@ class MenuCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         if (!isOutOfStock) {
+          // Panggil checkAndNavigate yang sekarang langsung menavigasi
           checkAndNavigate(context, item);
         }
       },
@@ -212,6 +78,11 @@ class MenuCard extends StatelessWidget {
                       height: 120,
                       width: double.infinity,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        return loadingProgress == null
+                            ? child
+                            : const Center(child: CircularProgressIndicator());
+                      },
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           height: 120,

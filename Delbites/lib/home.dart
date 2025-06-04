@@ -1,4 +1,4 @@
-import 'package:Delbites/keranjang.dart';
+import 'package:Delbites/profile.dart';
 import 'package:Delbites/services/menu_services.dart';
 import 'package:Delbites/widgets/menu_card.dart';
 import 'package:flutter/material.dart';
@@ -22,24 +22,22 @@ class _HomePageState extends State<HomePage> {
   String searchQuery = '';
   String selectedCategory = 'Rekomendasi';
   int? idPelanggan;
+  String? namaPelanggan; // Menambahkan variabel untuk nama pelanggan
 
   @override
   void initState() {
     super.initState();
     loadPelangganInfo();
     fetchMenu();
-    // _checkStoredData(); --untuk debug
   }
 
-  // Future<void> _checkStoredData() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   print("Stored ID: ${prefs.getInt('id_pelanggan')}");
-  //   print("Stored Nama: ${prefs.getString('nama_pelanggan')}");
-  // }
+  // Fungsi untuk memuat informasi pelanggan (ID dan Nama) dari SharedPreferences
   Future<void> loadPelangganInfo() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       idPelanggan = prefs.getInt('id_pelanggan');
+      namaPelanggan =
+          prefs.getString('nama_pelanggan'); // Memuat nama pelanggan
     });
   }
 
@@ -55,9 +53,11 @@ class _HomePageState extends State<HomePage> {
       });
     } catch (e) {
       setState(() => isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Terjadi kesalahan: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Terjadi kesalahan: $e')),
+        );
+      }
     }
   }
 
@@ -142,10 +142,10 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      // bottomNavigationBar: const BottomNavBar(currentIndex: 0),
     );
   }
 
+  // Widget Header
   Widget _buildHeader() {
     return Container(
       width: double.infinity,
@@ -173,9 +173,10 @@ class _HomePageState extends State<HomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Selamat Datang di DelBites',
-                    style: TextStyle(
+                  Text(
+                    // Menggunakan nama pelanggan jika tersedia, jika tidak, gunakan "DelBites"
+                    'Selamat Datang ${namaPelanggan ?? ''} di DelBites',
+                    style: const TextStyle(
                       fontSize: 18,
                       fontFamily: 'Poppins',
                       fontWeight: FontWeight.bold,
@@ -184,35 +185,26 @@ class _HomePageState extends State<HomePage> {
                     overflow: TextOverflow.ellipsis,
                     maxLines: 2,
                   ),
-                  const SizedBox(height: 8),
-                  Image.asset('assets/icon/logo1.png',
-                      width: 50, height: 50, fit: BoxFit.cover),
+                  // Menghapus Image.asset di sini
                 ],
               ),
             ),
+            // Mengubah ikon keranjang menjadi ikon profil
             IconButton(
-              icon: const Icon(Icons.shopping_cart,
-                  size: 30, color: Colors.white),
+              icon: const Icon(Icons.person, size: 30, color: Colors.white),
               onPressed: () async {
                 final prefs = await SharedPreferences.getInstance();
                 final id = prefs.getInt('id_pelanggan');
 
-                if (id != null) {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => KeranjangPage(idPelanggan: id),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content:
-                          Text('Silakan isi data pelanggan terlebih dahulu.'),
-                      backgroundColor: Colors.red,
-                    ),
-                  );
-                }
+                // Navigasi ke ProfilePage
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfilePage(
+                        idPelanggan:
+                            id ?? 0), // Mengirim 0 jika idPelanggan null
+                  ),
+                );
               },
             ),
           ],
@@ -221,6 +213,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget Search Bar
   Widget _buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -254,6 +247,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget Pemilih Kategori
   Widget _buildCategorySelector() {
     final categories = ["Rekomendasi", "makanan", "minuman"];
     return Padding(
@@ -273,6 +267,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget Grid Menu
   Widget _buildMenuGrid() {
     return GridView.builder(
       padding: const EdgeInsets.all(15),

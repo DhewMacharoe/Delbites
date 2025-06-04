@@ -19,6 +19,7 @@ class CheckoutPage extends StatefulWidget {
 
   final int idPelanggan;
   final int totalHarga;
+  final bool isPaymentEnabled = true;
 
   const CheckoutPage({
     Key? key,
@@ -69,6 +70,7 @@ Future<String> getDeviceId() async {
 class _CheckoutPageState extends State<CheckoutPage> {
   String? selectedPayment;
   bool isLoading = false;
+  bool isPaymentActive = true; // New variable for payment switch
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -420,11 +422,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: selectedPayment == null
-                      ? null
-                      : selectedPayment == 'Bayar langsung di kasir'
+                  onPressed: isPaymentActive && selectedPayment != null
+                      ? (selectedPayment == 'Bayar langsung di kasir'
                           ? processCashPayment
-                          : processPayment,
+                          : processPayment)
+                      : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: selectedPayment == null
                         ? Colors.grey
@@ -471,6 +473,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               'Pembayaran',
                               style: TextStyle(
                                   fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 10),
+                            SwitchListTile(
+                              title: const Text('Aktifkan Pembayaran'),
+                              value: isPaymentActive,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  isPaymentActive = value;
+                                });
+                              },
                             ),
                             const SizedBox(height: 10),
                             SizedBox(
